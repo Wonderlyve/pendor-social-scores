@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Heart, MessageCircle, Share, TrendingUp, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,7 +8,7 @@ import PredictionCard from '@/components/PredictionCard';
 const Index = () => {
   const [activeTab, setActiveTab] = useState('trending');
 
-  // Mock data for predictions
+  // Mock data for predictions with images and multiple matches
   const mockPredictions = [
     {
       id: 1,
@@ -23,13 +22,14 @@ const Index = () => {
       prediction: 'Victoire PSG',
       odds: '2.10',
       confidence: 4,
-      analysis: 'PSG en forme à domicile, Mbappé en grande forme. Real sans Benzema.',
+      analysis: 'PSG en forme à domicile, Mbappé en grande forme. Real sans Benzema. Défense madrilène fragile sur les transitions rapides.',
       likes: 127,
       comments: 23,
       shares: 8,
       successRate: 78,
       timeAgo: '2h',
-      sport: 'Football'
+      sport: 'Football',
+      image: '/lovable-uploads/f593bf70-d83a-44d2-9466-d88bdf20bad0.png'
     },
     {
       id: 2,
@@ -39,17 +39,44 @@ const Index = () => {
         badge: 'Pro',
         badgeColor: 'bg-blue-500'
       },
-      match: 'Lakers vs Warriors',
-      prediction: 'Plus de 220.5 points',
+      match: 'Pari Combiné',
+      prediction: 'Triple combiné',
       odds: '1.85',
-      confidence: 3,
-      analysis: 'Deux attaques prolifiques, défenses fragiles cette saison.',
+      totalOdds: '1.25',
+      confidence: 5,
+      analysis: 'Combiné sûr avec trois équipes en grande forme. Analyse détaillée de chaque match dans les pronostics.',
       likes: 89,
       comments: 15,
       shares: 5,
       successRate: 65,
       timeAgo: '4h',
-      sport: 'Basketball'
+      sport: 'Football',
+      matches: [
+        {
+          id: 1,
+          teams: 'Betis Séville vs Jagiellonia',
+          prediction: 'Victoire Betis',
+          odds: '1.45',
+          league: 'Conference League',
+          time: '18:45'
+        },
+        {
+          id: 2,
+          teams: 'Manchester City vs Inter',
+          prediction: 'Plus de 2.5 buts',
+          odds: '1.65',
+          league: 'Champions League',
+          time: '21:00'
+        },
+        {
+          id: 3,
+          teams: 'Barcelona vs Bayern',
+          prediction: 'Barcelone ou match nul',
+          odds: '1.35',
+          league: 'Champions League',
+          time: '21:00'
+        }
+      ]
     },
     {
       id: 3,
@@ -63,27 +90,39 @@ const Index = () => {
       prediction: 'Victoire Alcaraz en 3 sets',
       odds: '3.20',
       confidence: 5,
-      analysis: 'Alcaraz très en forme sur terre battue, Djokovic pas à 100%.',
+      analysis: 'Alcaraz très en forme sur terre battue, Djokovic pas à 100%. Le jeune espagnol a les armes pour battre le serbe.',
       likes: 234,
       comments: 67,
       shares: 19,
       successRate: 72,
       timeAgo: '6h',
-      sport: 'Tennis'
+      sport: 'Tennis',
+      video: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'
     }
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+      <div className="bg-gradient-to-r from-green-500 to-green-600 shadow-sm border-b sticky top-0 z-10">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-primary">Pendor</h1>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
+                <span className="text-yellow-800 text-lg">🏆</span>
+              </div>
+              <h1 className="text-2xl font-bold text-white">PENDOR</h1>
+            </div>
+            <div className="flex items-center space-x-3">
+              <button className="p-2 hover:bg-green-700 rounded-full transition-colors">
+                <span className="text-white text-xl">🔔</span>
+              </button>
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-bold">P</span>
               </div>
+              <button className="text-white hover:bg-green-700 p-1 rounded">
+                <span className="text-xl">☰</span>
+              </button>
             </div>
           </div>
         </div>

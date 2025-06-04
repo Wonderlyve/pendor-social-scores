@@ -1,7 +1,15 @@
 
-import { Heart, MessageCircle, Share, Star } from 'lucide-react';
+import { Heart, MessageCircle, Share, Star, MoreVertical, Play } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { 
+  ContextMenu, 
+  ContextMenuContent, 
+  ContextMenuItem, 
+  ContextMenuTrigger 
+} from '@/components/ui/context-menu';
+import PredictionModal from './PredictionModal';
 
 interface PredictionCardProps {
   prediction: {
@@ -23,10 +31,26 @@ interface PredictionCardProps {
     successRate: number;
     timeAgo: string;
     sport: string;
+    image?: string;
+    video?: string;
+    totalOdds?: string;
+    matches?: Array<{
+      id: number;
+      teams: string;
+      prediction: string;
+      odds: string;
+      league: string;
+      time: string;
+    }>;
   };
 }
 
 const PredictionCard = ({ prediction }: PredictionCardProps) => {
+  const handleMenuAction = (action: string) => {
+    console.log(`Action: ${action} on prediction ${prediction.id}`);
+    // Ici on ajoutera la logique pour chaque action
+  };
+
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow">
       <CardContent className="p-4">
@@ -57,6 +81,32 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
               </div>
             </div>
           </div>
+          
+          {/* Menu 3 points */}
+          <ContextMenu>
+            <ContextMenuTrigger>
+              <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+                <MoreVertical className="w-4 h-4 text-gray-500" />
+              </button>
+            </ContextMenuTrigger>
+            <ContextMenuContent className="w-48">
+              <ContextMenuItem onClick={() => handleMenuAction('follow')}>
+                👤 Suivre cet utilisateur
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => handleMenuAction('save')}>
+                🔖 Sauvegarder
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => handleMenuAction('copy')}>
+                📋 Copier le lien
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => handleMenuAction('report')}>
+                🚨 Signaler
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => handleMenuAction('hide')}>
+                👁️ Masquer ce post
+              </ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
         </div>
 
         {/* Match Info */}
@@ -67,6 +117,11 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
               {prediction.prediction}
             </span>
             <span className="text-gray-600">Cote: {prediction.odds}</span>
+            {prediction.totalOdds && (
+              <span className="text-sm text-orange-600 font-medium">
+                Cote totale: {prediction.totalOdds}
+              </span>
+            )}
           </div>
           
           {/* Confidence Stars */}
@@ -80,8 +135,37 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
                 }`}
               />
             ))}
+            <span className="text-sm text-yellow-600 font-medium ml-1">
+              {prediction.confidence === 5 ? '🔥🔥' : prediction.confidence >= 4 ? '🔥' : ''}
+            </span>
           </div>
         </div>
+
+        {/* Media Content */}
+        {(prediction.image || prediction.video) && (
+          <div className="mb-4 rounded-lg overflow-hidden">
+            {prediction.video ? (
+              <div className="relative">
+                <video
+                  className="w-full h-48 object-cover"
+                  poster={prediction.image}
+                  controls
+                >
+                  <source src={prediction.video} type="video/mp4" />
+                </video>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <Play className="w-12 h-12 text-white opacity-80" />
+                </div>
+              </div>
+            ) : prediction.image && (
+              <img
+                src={prediction.image}
+                alt="Contenu du post"
+                className="w-full h-48 object-cover"
+              />
+            )}
+          </div>
+        )}
 
         {/* Analysis */}
         <div className="mb-4">
@@ -104,9 +188,24 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
               <span className="text-sm">{prediction.shares}</span>
             </button>
           </div>
-          <Button variant="outline" size="sm">
-            Suivre
-          </Button>
+          <div className="flex space-x-2">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="bg-green-500 hover:bg-green-600 text-white" size="sm">
+                  Voir les pronostics
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Pronostics de {prediction.user.username}</DialogTitle>
+                </DialogHeader>
+                <PredictionModal prediction={prediction} />
+              </DialogContent>
+            </Dialog>
+            <Button variant="outline" size="sm">
+              Suivre
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
