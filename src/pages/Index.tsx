@@ -1,15 +1,15 @@
-
 import { useState } from 'react';
 import { Heart, MessageCircle, Share, TrendingUp, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import BottomNavigation from '@/components/BottomNavigation';
 import PredictionCard from '@/components/PredictionCard';
+import SideMenu from '@/components/SideMenu';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('trending');
+  const [showSideMenu, setShowSideMenu] = useState(false);
 
-  // Mock data for predictions with real images and videos
   const mockPredictions = [
     {
       id: 1,
@@ -142,7 +142,10 @@ const Index = () => {
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-bold">P</span>
               </div>
-              <button className="text-white hover:bg-green-700 p-1 rounded">
+              <button 
+                onClick={() => setShowSideMenu(true)}
+                className="text-white hover:bg-green-700 p-1 rounded"
+              >
                 <span className="text-xl">☰</span>
               </button>
             </div>
@@ -150,7 +153,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="bg-white border-b">
         <div className="flex">
           <button
@@ -253,6 +255,7 @@ const Index = () => {
       </div>
 
       <BottomNavigation />
+      <SideMenu open={showSideMenu} onOpenChange={setShowSideMenu} />
     </div>
   );
 };

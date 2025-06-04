@@ -1,0 +1,119 @@
+
+import { useState } from 'react';
+import { X, User, Home, Search, Video, TrendingUp, Settings, HelpCircle, LogOut, Bell, Bookmark } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { useNavigate } from 'react-router-dom';
+
+interface SideMenuProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const SideMenu = ({ open, onOpenChange }: SideMenuProps) => {
+  const navigate = useNavigate();
+
+  const menuItems = [
+    { icon: Home, label: 'Accueil', action: () => { navigate('/'); onOpenChange(false); } },
+    { icon: User, label: 'Mon Profil', action: () => { navigate('/profile'); onOpenChange(false); } },
+    { icon: Search, label: 'Explorer', action: () => {} },
+    { icon: Video, label: 'Lives', action: () => {} },
+    { icon: TrendingUp, label: 'Classements', action: () => {} },
+    { icon: Bookmark, label: 'Favoris', action: () => {} },
+    { icon: Bell, label: 'Notifications', action: () => {} },
+  ];
+
+  const settingsItems = [
+    { icon: Settings, label: 'Paramètres', action: () => {} },
+    { icon: HelpCircle, label: 'Aide & Support', action: () => {} },
+  ];
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="left" className="w-80 p-0">
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <SheetHeader className="p-6 pb-4 bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <span className="text-2xl">🏆</span>
+              </div>
+              <div>
+                <SheetTitle className="text-white text-xl">PENDOR</SheetTitle>
+                <p className="text-green-100 text-sm">Vos pronostics gagnants</p>
+              </div>
+            </div>
+          </SheetHeader>
+
+          {/* User Info */}
+          <div className="p-6 pb-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold">P</span>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900">PronoExpert</p>
+                <p className="text-sm text-gray-500">Taux de réussite: 86%</p>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Navigation Menu */}
+          <div className="flex-1 py-4">
+            <div className="space-y-1 px-3">
+              {menuItems.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <Button
+                    key={index}
+                    variant="ghost"
+                    className="w-full justify-start space-x-3 h-12 px-4 text-left"
+                    onClick={item.action}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span>{item.label}</span>
+                  </Button>
+                );
+              })}
+            </div>
+
+            <Separator className="my-4" />
+
+            <div className="space-y-1 px-3">
+              {settingsItems.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <Button
+                    key={index}
+                    variant="ghost"
+                    className="w-full justify-start space-x-3 h-12 px-4 text-left"
+                    onClick={item.action}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span>{item.label}</span>
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Logout */}
+          <div className="p-4 border-t">
+            <Button
+              variant="outline"
+              className="w-full justify-start space-x-3 h-12 text-red-600 border-red-200 hover:bg-red-50"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Déconnexion</span>
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+export default SideMenu;
