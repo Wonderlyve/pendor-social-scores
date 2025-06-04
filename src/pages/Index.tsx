@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Heart, MessageCircle, Share, TrendingUp, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,13 +9,13 @@ import PredictionCard from '@/components/PredictionCard';
 const Index = () => {
   const [activeTab, setActiveTab] = useState('trending');
 
-  // Mock data for predictions with images and multiple matches
+  // Mock data for predictions with real images and videos
   const mockPredictions = [
     {
       id: 1,
       user: {
         username: '@prono_king',
-        avatar: '/placeholder.svg',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
         badge: 'Confirmé',
         badgeColor: 'bg-yellow-500'
       },
@@ -29,13 +30,13 @@ const Index = () => {
       successRate: 78,
       timeAgo: '2h',
       sport: 'Football',
-      image: '/lovable-uploads/f593bf70-d83a-44d2-9466-d88bdf20bad0.png'
+      image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&h=600&fit=crop'
     },
     {
       id: 2,
       user: {
         username: '@sport_analyst',
-        avatar: '/placeholder.svg',
+        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b332c3c3?w=100&h=100&fit=crop&crop=face',
         badge: 'Pro',
         badgeColor: 'bg-blue-500'
       },
@@ -82,7 +83,7 @@ const Index = () => {
       id: 3,
       user: {
         username: '@tennis_pro',
-        avatar: '/placeholder.svg',
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
         badge: 'Novice',
         badgeColor: 'bg-green-500'
       },
@@ -98,6 +99,27 @@ const Index = () => {
       timeAgo: '6h',
       sport: 'Tennis',
       video: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'
+    },
+    {
+      id: 4,
+      user: {
+        username: '@basket_expert',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face',
+        badge: 'Pro',
+        badgeColor: 'bg-blue-500'
+      },
+      match: 'Lakers vs Warriors',
+      prediction: 'Plus de 220 points',
+      odds: '1.95',
+      confidence: 3,
+      analysis: 'Deux attaques prolifiques, défenses moyennes. Le rythme devrait être élevé avec beaucoup de possessions.',
+      likes: 156,
+      comments: 41,
+      shares: 12,
+      successRate: 83,
+      timeAgo: '1h',
+      sport: 'Basketball',
+      image: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&h=600&fit=crop'
     }
   ];
 
