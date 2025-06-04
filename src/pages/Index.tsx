@@ -1,15 +1,22 @@
-
 import { useState } from 'react';
 import { Heart, MessageCircle, Share, TrendingUp, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import BottomNavigation from '@/components/BottomNavigation';
 import PredictionCard from '@/components/PredictionCard';
+import CommentsSheet from '@/components/CommentsSheet';
+import CreatePredictionModal from '@/components/CreatePredictionModal';
+import SideMenu from '@/components/SideMenu';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('trending');
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [selectedPredictionId, setSelectedPredictionId] = useState<number | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
 
-  // Mock data for predictions with real images and videos
+  // ... keep existing code (mockPredictions array)
+
   const mockPredictions = [
     {
       id: 1,
@@ -123,6 +130,11 @@ const Index = () => {
     }
   ];
 
+  const handleCommentClick = (predictionId: number) => {
+    setSelectedPredictionId(predictionId);
+    setIsCommentsOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
@@ -142,7 +154,10 @@ const Index = () => {
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-bold">P</span>
               </div>
-              <button className="text-white hover:bg-green-700 p-1 rounded">
+              <button 
+                onClick={() => setIsSideMenuOpen(true)}
+                className="text-white hover:bg-green-700 p-1 rounded"
+              >
                 <span className="text-xl">☰</span>
               </button>
             </div>
@@ -150,7 +165,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* ... keep existing code (Tabs section) */}
       <div className="bg-white border-b">
         <div className="flex">
           <button
@@ -191,7 +206,7 @@ const Index = () => {
       <div className="px-4 py-2 space-y-4">
         {activeTab === 'trending' && (
           <>
-            {/* Quick Stats */}
+            {/* ... keep existing code (Quick Stats card) */}
             <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
               <CardContent className="p-4">
                 <div className="flex justify-between items-center">
@@ -221,12 +236,17 @@ const Index = () => {
             {/* Predictions Feed */}
             <div className="space-y-4">
               {mockPredictions.map((prediction) => (
-                <PredictionCard key={prediction.id} prediction={prediction} />
+                <PredictionCard 
+                  key={prediction.id} 
+                  prediction={prediction}
+                  onCommentClick={() => handleCommentClick(prediction.id)}
+                />
               ))}
             </div>
           </>
         )}
 
+        {/* ... keep existing code (following and live tabs) */}
         {activeTab === 'following' && (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
@@ -252,7 +272,24 @@ const Index = () => {
         )}
       </div>
 
-      <BottomNavigation />
+      <BottomNavigation onCreatePost={() => setIsCreateModalOpen(true)} />
+
+      {/* Modals et Sheets */}
+      <CommentsSheet 
+        isOpen={isCommentsOpen}
+        onClose={() => setIsCommentsOpen(false)}
+        predictionId={selectedPredictionId || 0}
+      />
+      
+      <CreatePredictionModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
+
+      <SideMenu
+        isOpen={isSideMenuOpen}
+        onClose={() => setIsSideMenuOpen(false)}
+      />
     </div>
   );
 };
