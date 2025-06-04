@@ -1,227 +1,287 @@
 
-import { useState } from 'react';
-import { Heart, MessageCircle, Share, MoreVertical, Play, VolumeX, Volume2 } from 'lucide-react';
+import { Heart, MessageCircle, Share, Star, MoreVertical, Play, VolumeX, Volume2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import PredictionModal from '@/components/PredictionModal';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { 
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import PredictionModal from './PredictionModal';
+import { useState, useRef } from 'react';
 
 interface PredictionCardProps {
-  prediction: any;
-  onCommentClick?: () => void;
+  prediction: {
+    id: number;
+    user: {
+      username: string;
+      avatar: string;
+      badge: string;
+      badgeColor: string;
+    };
+    match: string;
+    prediction: string;
+    odds: string;
+    confidence: number;
+    analysis: string;
+    likes: number;
+    comments: number;
+    shares: number;
+    successRate: number;
+    timeAgo: string;
+    sport: string;
+    image?: string;
+    video?: string;
+    totalOdds?: string;
+    matches?: Array<{
+      id: number;
+      teams: string;
+      prediction: string;
+      odds: string;
+      league: string;
+      time: string;
+    }>;
+  };
 }
 
-const PredictionCard = ({ prediction, onCommentClick }: PredictionCardProps) => {
-  const [isLiked, setIsLiked] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+const PredictionCard = ({ prediction }: PredictionCardProps) => {
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  const handleVideoPlay = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const video = e.currentTarget.querySelector('video') as HTMLVideoElement;
-    if (video) {
-      video.play();
-      setIsVideoPlaying(true);
+  const handleMenuAction = (action: string) => {
+    console.log(`Action: ${action} on prediction ${prediction.id}`);
+  };
+
+  const handlePlayVideo = () => {
+    if (videoRef.current) {
+      videoRef.current.play();
+      setIsPlaying(true);
     }
   };
 
-  const toggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const video = e.currentTarget.parentElement?.querySelector('video') as HTMLVideoElement;
-    if (video) {
-      video.muted = !video.muted;
-      setIsMuted(video.muted);
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(videoRef.current.muted);
     }
   };
 
   return (
-    <>
-      <Card className="bg-white">
-        <CardContent className="p-4 space-y-3">
-          {/* User Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={prediction.user.avatar} />
-                <AvatarFallback>{prediction.user.username[1]}</AvatarFallback>
-              </Avatar>
-              <div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-semibold text-sm">{prediction.user.username}</span>
-                  <Badge className={`${prediction.user.badgeColor} text-white text-xs px-2 py-0.5`}>
-                    {prediction.user.badge}
-                  </Badge>
-                  <span className="text-gray-500 text-sm">• {prediction.timeAgo}</span>
-                </div>
-                <div className="flex items-center space-x-2 mt-1">
-                  <span className="text-xs text-gray-500">{prediction.sport}</span>
-                  <span className="text-xs text-gray-500">• {prediction.successRate}% de réussite</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-2">
-                <span className="text-lg font-bold text-green-600">{prediction.odds}</span>
-                <Button size="sm" variant="outline">
-                  Suivre
-                </Button>
-              </div>
-              <button
-                onClick={() => setIsMenuOpen(true)}
-                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <MoreVertical className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-          </div>
-
-          {/* Match Info */}
-          <div className="space-y-2">
-            <h3 className="font-semibold text-gray-900">{prediction.match}</h3>
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-1">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className={`text-lg ${i < prediction.confidence ? 'text-yellow-400' : 'text-gray-300'}`}>
-                    ⭐
-                  </span>
-                ))}
-                <span className="text-sm text-gray-600 ml-2">Confiance: {prediction.confidence}/5</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Media */}
-          {prediction.image && (
-            <div className="rounded-lg overflow-hidden">
-              <img 
-                src={prediction.image} 
-                alt="Match" 
-                className="w-full h-48 object-cover"
+    <Card className="shadow-sm hover:shadow-md transition-shadow">
+      <CardContent className="p-4">
+        {/* User Info */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <img
+                src={prediction.user.avatar}
+                alt={prediction.user.username}
+                className="w-10 h-10 rounded-full"
               />
+              <div className={`absolute -bottom-1 -right-1 w-5 h-5 ${prediction.user.badgeColor} rounded-full flex items-center justify-center`}>
+                <span className="text-white text-xs font-bold">
+                  {prediction.user.badge === 'Confirmé' ? 'C' : prediction.user.badge === 'Pro' ? 'P' : 'N'}
+                </span>
+              </div>
             </div>
-          )}
-
-          {prediction.video && (
-            <div className="relative rounded-lg overflow-hidden">
-              <video
-                className="w-full h-48 object-cover"
-                poster="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=600&fit=crop"
-                muted={isMuted}
-                onPlay={() => setIsVideoPlaying(true)}
-                onPause={() => setIsVideoPlaying(false)}
-              >
-                <source src={prediction.video} type="video/mp4" />
-              </video>
-              
-              {!isVideoPlaying && (
-                <button
-                  onClick={handleVideoPlay}
-                  className="absolute inset-0 flex items-center justify-center bg-black/20"
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="font-medium text-gray-900">{prediction.user.username}</span>
+                <span className="text-xs text-gray-500">{prediction.timeAgo}</span>
+              </div>
+              <div className="flex items-center space-x-2 text-xs text-gray-500">
+                <span>{prediction.successRate}% de réussite</span>
+                <span>•</span>
+                <span className="px-2 py-1 bg-gray-100 rounded-full">{prediction.sport}</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Menu 3 points */}
+          <Drawer>
+            <DrawerTrigger asChild>
+              <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+                <MoreVertical className="w-4 h-4 text-gray-500" />
+              </button>
+            </DrawerTrigger>
+            <DrawerContent className="h-[75vh]">
+              <DrawerHeader>
+                <DrawerTitle>Options du post</DrawerTitle>
+              </DrawerHeader>
+              <div className="p-4 space-y-3">
+                <button 
+                  onClick={() => handleMenuAction('follow')}
+                  className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
                 >
-                  <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors">
-                    <Play className="w-8 h-8 text-gray-800 ml-1" />
-                  </div>
+                  <span className="text-2xl">👤</span>
+                  <span>Suivre cet utilisateur</span>
                 </button>
+                <button 
+                  onClick={() => handleMenuAction('save')}
+                  className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
+                >
+                  <span className="text-2xl">🔖</span>
+                  <span>Sauvegarder</span>
+                </button>
+                <button 
+                  onClick={() => handleMenuAction('copy')}
+                  className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
+                >
+                  <span className="text-2xl">📋</span>
+                  <span>Copier le lien</span>
+                </button>
+                <button 
+                  onClick={() => handleMenuAction('report')}
+                  className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
+                >
+                  <span className="text-2xl">🚨</span>
+                  <span>Signaler</span>
+                </button>
+                <button 
+                  onClick={() => handleMenuAction('hide')}
+                  className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
+                >
+                  <span className="text-2xl">👁️</span>
+                  <span>Masquer ce post</span>
+                </button>
+                <button 
+                  onClick={() => handleMenuAction('block')}
+                  className="w-full text-left p-3 hover:bg-red-50 rounded-lg transition-colors flex items-center space-x-3 text-red-600"
+                >
+                  <span className="text-2xl">🚫</span>
+                  <span>Bloquer l'utilisateur</span>
+                </button>
+              </div>
+            </DrawerContent>
+          </Drawer>
+        </div>
+
+        {/* Match Info - Réorganisé */}
+        <div className="mb-3">
+          <div className="font-semibold text-lg text-gray-900 mb-2">{prediction.match}</div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <span className="text-gray-600">Cote: {prediction.odds}</span>
+              {prediction.totalOdds && (
+                <span className="text-sm text-orange-600 font-medium">
+                  Cote totale: {prediction.totalOdds}
+                </span>
               )}
-              
-              <button
-                onClick={toggleMute}
-                className="absolute bottom-3 right-3 p-2 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
-              >
-                {isMuted ? (
-                  <VolumeX className="w-4 h-4 text-white" />
-                ) : (
-                  <Volume2 className="w-4 h-4 text-white" />
-                )}
-              </button>
             </div>
-          )}
-
-          {/* Analysis Preview */}
-          <p className="text-gray-700 text-sm line-clamp-2">{prediction.analysis}</p>
-
-          {/* Actions */}
-          <div className="flex items-center justify-between pt-2">
-            <div className="flex items-center space-x-6">
-              <button
-                onClick={() => setIsLiked(!isLiked)}
-                className={`flex items-center space-x-2 ${isLiked ? 'text-red-500' : 'text-gray-500'} hover:text-red-500 transition-colors`}
-              >
-                <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-                <span className="text-sm">{prediction.likes + (isLiked ? 1 : 0)}</span>
-              </button>
-              
-              <button
-                onClick={onCommentClick}
-                className="flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-colors"
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span className="text-sm">{prediction.comments}</span>
-              </button>
-              
-              <button className="flex items-center space-x-2 text-gray-500 hover:text-green-500 transition-colors">
-                <Share className="w-5 h-5" />
-                <span className="text-sm">{prediction.shares}</span>
-              </button>
-            </div>
-            
-            <Button 
-              onClick={() => setIsModalOpen(true)}
-              size="sm" 
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              Voir les pronostics
+            <Button variant="outline" size="sm">
+              Suivre
             </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      <PredictionModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        prediction={prediction}
-      />
-
-      {/* Menu Bottom Sheet */}
-      <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-        <SheetContent side="bottom" className="h-[75vh]">
-          <SheetHeader>
-            <SheetTitle>Options du post</SheetTitle>
-          </SheetHeader>
           
-          <div className="py-6 space-y-4">
-            <button className="w-full text-left p-4 hover:bg-gray-50 rounded-lg transition-colors">
-              <div className="font-medium">Masquer ce post</div>
-              <div className="text-sm text-gray-500">Ne plus voir ce type de contenu</div>
+          {/* Confidence Stars */}
+          <div className="flex items-center space-x-1">
+            <span className="text-sm text-gray-600">Confiance:</span>
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={`w-4 h-4 ${
+                  i < prediction.confidence ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                }`}
+              />
+            ))}
+            <span className="text-sm text-yellow-600 font-medium ml-1">
+              {prediction.confidence === 5 ? '🔥🔥' : prediction.confidence >= 4 ? '🔥' : ''}
+            </span>
+          </div>
+        </div>
+
+        {/* Media Content */}
+        {(prediction.image || prediction.video) && (
+          <div className="mb-4 rounded-lg overflow-hidden relative">
+            {prediction.video ? (
+              <div className="relative">
+                <video
+                  ref={videoRef}
+                  className="w-full h-48 object-cover"
+                  poster="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&h=600&fit=crop"
+                  muted={isMuted}
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                  controls={false}
+                >
+                  <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4" />
+                </video>
+                
+                {/* Play Button */}
+                {!isPlaying && (
+                  <button 
+                    onClick={handlePlayVideo}
+                    className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 transition-opacity"
+                  >
+                    <div className="w-16 h-16 bg-white bg-opacity-90 rounded-full flex items-center justify-center">
+                      <Play className="w-8 h-8 text-gray-800 ml-1" />
+                    </div>
+                  </button>
+                )}
+                
+                {/* Mute Button */}
+                <button 
+                  onClick={toggleMute}
+                  className="absolute bottom-2 right-2 w-8 h-8 bg-black bg-opacity-60 rounded-full flex items-center justify-center"
+                >
+                  {isMuted ? (
+                    <VolumeX className="w-4 h-4 text-white" />
+                  ) : (
+                    <Volume2 className="w-4 h-4 text-white" />
+                  )}
+                </button>
+              </div>
+            ) : prediction.image && (
+              <img
+                src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&h=600&fit=crop"
+                alt="Contenu du post"
+                className="w-full h-48 object-cover"
+              />
+            )}
+          </div>
+        )}
+
+        {/* Analysis */}
+        <div className="mb-4">
+          <p className="text-gray-700 text-sm leading-relaxed">{prediction.analysis}</p>
+        </div>
+
+        {/* Actions - Réorganisées */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button className="flex items-center space-x-1 text-gray-600 hover:text-red-500 transition-colors">
+              <Heart className="w-5 h-5" />
+              <span className="text-sm">{prediction.likes}</span>
             </button>
-            
-            <button className="w-full text-left p-4 hover:bg-gray-50 rounded-lg transition-colors">
-              <div className="font-medium">Signaler le post</div>
-              <div className="text-sm text-gray-500">Contenu inapproprié ou spam</div>
+            <button className="flex items-center space-x-1 text-gray-600 hover:text-blue-500 transition-colors">
+              <MessageCircle className="w-5 h-5" />
+              <span className="text-sm">{prediction.comments}</span>
             </button>
-            
-            <button className="w-full text-left p-4 hover:bg-gray-50 rounded-lg transition-colors">
-              <div className="font-medium">Bloquer @{prediction.user.username}</div>
-              <div className="text-sm text-gray-500">Ne plus voir les posts de cet utilisateur</div>
-            </button>
-            
-            <button className="w-full text-left p-4 hover:bg-gray-50 rounded-lg transition-colors">
-              <div className="font-medium">Copier le lien</div>
-              <div className="text-sm text-gray-500">Partager ce post</div>
-            </button>
-            
-            <button className="w-full text-left p-4 hover:bg-gray-50 rounded-lg transition-colors">
-              <div className="font-medium">Enregistrer</div>
-              <div className="text-sm text-gray-500">Ajouter à mes favoris</div>
+            <button className="flex items-center space-x-1 text-gray-600 hover:text-green-500 transition-colors">
+              <Share className="w-5 h-5" />
+              <span className="text-sm">{prediction.shares}</span>
             </button>
           </div>
-        </SheetContent>
-      </Sheet>
-    </>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-green-500 hover:bg-green-600 text-white" size="sm">
+                Voir les pronostics
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Pronostics de {prediction.user.username}</DialogTitle>
+              </DialogHeader>
+              <PredictionModal prediction={prediction} />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

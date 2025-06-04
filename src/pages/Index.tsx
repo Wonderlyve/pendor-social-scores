@@ -1,22 +1,15 @@
+
 import { useState } from 'react';
 import { Heart, MessageCircle, Share, TrendingUp, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import BottomNavigation from '@/components/BottomNavigation';
 import PredictionCard from '@/components/PredictionCard';
-import CommentsSheet from '@/components/CommentsSheet';
-import CreatePredictionModal from '@/components/CreatePredictionModal';
-import SideMenu from '@/components/SideMenu';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('trending');
-  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
-  const [selectedPostId, setSelectedPostId] = useState<string>('');
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
 
-  // ... keep existing code (mockPredictions data)
-
+  // Mock data for predictions with real images and videos
   const mockPredictions = [
     {
       id: 1,
@@ -105,7 +98,7 @@ const Index = () => {
       successRate: 72,
       timeAgo: '6h',
       sport: 'Tennis',
-      video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+      video: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'
     },
     {
       id: 4,
@@ -130,11 +123,6 @@ const Index = () => {
     }
   ];
 
-  const handleCommentClick = (postId: string) => {
-    setSelectedPostId(postId);
-    setIsCommentsOpen(true);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
@@ -154,10 +142,7 @@ const Index = () => {
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-bold">P</span>
               </div>
-              <button 
-                onClick={() => setIsSideMenuOpen(true)}
-                className="text-white hover:bg-green-700 p-1 rounded"
-              >
+              <button className="text-white hover:bg-green-700 p-1 rounded">
                 <span className="text-xl">☰</span>
               </button>
             </div>
@@ -165,7 +150,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* ... keep existing code (Tabs section) */}
+      {/* Tabs */}
       <div className="bg-white border-b">
         <div className="flex">
           <button
@@ -236,17 +221,12 @@ const Index = () => {
             {/* Predictions Feed */}
             <div className="space-y-4">
               {mockPredictions.map((prediction) => (
-                <PredictionCard 
-                  key={prediction.id} 
-                  prediction={prediction}
-                  onCommentClick={() => handleCommentClick(prediction.id.toString())}
-                />
+                <PredictionCard key={prediction.id} prediction={prediction} />
               ))}
             </div>
           </>
         )}
 
-        {/* ... keep existing code (following and live tabs) */}
         {activeTab === 'following' && (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
@@ -272,23 +252,7 @@ const Index = () => {
         )}
       </div>
 
-      <BottomNavigation onCreatePost={() => setIsCreateModalOpen(true)} />
-      
-      <CommentsSheet 
-        isOpen={isCommentsOpen}
-        onClose={() => setIsCommentsOpen(false)}
-        postId={selectedPostId}
-      />
-      
-      <CreatePredictionModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-      />
-      
-      <SideMenu
-        isOpen={isSideMenuOpen}
-        onClose={() => setIsSideMenuOpen(false)}
-      />
+      <BottomNavigation />
     </div>
   );
 };
