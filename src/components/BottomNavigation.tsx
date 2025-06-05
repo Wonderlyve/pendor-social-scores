@@ -12,7 +12,7 @@ const BottomNavigation = () => {
     { icon: Home, label: 'Accueil', active: true, action: () => navigate('/') },
     { icon: Search, label: 'Explorer', active: false, action: () => {} },
     { icon: Plus, label: '', active: false, action: () => setShowCreateModal(true), isCenter: true },
-    { icon: Video, label: 'Lives', active: false, action: () => {} },
+    { icon: Video, label: 'Lives', active: false, action: () => navigate('/lives') },
     { icon: User, label: 'Profil', active: false, action: () => navigate('/profile') },
   ];
 
