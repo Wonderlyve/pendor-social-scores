@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 import PredictionCard from '@/components/PredictionCard';
+import BottomNavigation from '@/components/BottomNavigation';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -29,7 +30,6 @@ const Profile = () => {
     }
   };
 
-  // Mock predictions for profile
   const userPredictions = [
     {
       id: 1,
@@ -55,7 +55,7 @@ const Profile = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <div className="bg-white border-b sticky top-0 z-10">
         <div className="px-4 py-3 flex items-center space-x-4">
@@ -217,7 +217,7 @@ const Profile = () => {
         </Tabs>
       </div>
 
-      <div className="pb-20"></div>
+      <BottomNavigation />
     </div>
   );
 };

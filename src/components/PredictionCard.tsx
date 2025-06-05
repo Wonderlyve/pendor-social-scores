@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/drawer';
 import PredictionModal from './PredictionModal';
 import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface PredictionCardProps {
   prediction: {
@@ -48,6 +49,7 @@ interface PredictionCardProps {
 }
 
 const PredictionCard = ({ prediction }: PredictionCardProps) => {
+  const navigate = useNavigate();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -70,13 +72,20 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
     }
   };
 
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow">
       <CardContent className="p-4">
         {/* User Info */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-3">
-            <div className="relative">
+            <div 
+              className="relative cursor-pointer"
+              onClick={handleProfileClick}
+            >
               <img
                 src={prediction.user.avatar}
                 alt={prediction.user.username}
@@ -90,7 +99,12 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-medium text-gray-900">{prediction.user.username}</span>
+                <span 
+                  className="font-medium text-gray-900 cursor-pointer hover:underline"
+                  onClick={handleProfileClick}
+                >
+                  {prediction.user.username}
+                </span>
                 <span className="text-xs text-gray-500">{prediction.timeAgo}</span>
               </div>
               <div className="flex items-center space-x-2 text-xs text-gray-500">
@@ -250,9 +264,9 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
           <p className="text-gray-700 text-sm leading-relaxed">{prediction.analysis}</p>
         </div>
 
-        {/* Actions - Réorganisées */}
+        {/* Actions - Espacement réduit */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             <button className="flex items-center space-x-1 text-gray-600 hover:text-red-500 transition-colors">
               <Heart className="w-5 h-5" />
               <span className="text-sm">{prediction.likes}</span>
@@ -268,8 +282,8 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="bg-green-500 hover:bg-green-600 text-white" size="sm">
-                Voir les pronostics
+              <Button className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1" size="sm">
+                Voir pronos
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
