@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { ArrowLeft, Calendar, MapPin, Link as LinkIcon, Edit, TrendingUp, Users, Award, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,8 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 import PredictionCard from '@/components/PredictionCard';
 import BottomNavigation from '@/components/BottomNavigation';
+import useScrollToTop from '@/hooks/useScrollToTop';
 
 const Profile = () => {
+  useScrollToTop();
+  
   const navigate = useNavigate();
   const [isFollowing, setIsFollowing] = useState(false);
 

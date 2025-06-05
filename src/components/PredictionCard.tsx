@@ -11,6 +11,7 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 import PredictionModal from './PredictionModal';
+import CommentsBottomSheet from './CommentsBottomSheet';
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -264,17 +265,21 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
           <p className="text-gray-700 text-sm leading-relaxed">{prediction.analysis}</p>
         </div>
 
-        {/* Actions - Espacement réduit */}
+        {/* Actions - Espacement amélioré */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-6">
             <button className="flex items-center space-x-1 text-gray-600 hover:text-red-500 transition-colors">
               <Heart className="w-5 h-5" />
               <span className="text-sm">{prediction.likes}</span>
             </button>
-            <button className="flex items-center space-x-1 text-gray-600 hover:text-blue-500 transition-colors">
-              <MessageCircle className="w-5 h-5" />
-              <span className="text-sm">{prediction.comments}</span>
-            </button>
+            
+            <CommentsBottomSheet commentsCount={prediction.comments}>
+              <button className="flex items-center space-x-1 text-gray-600 hover:text-blue-500 transition-colors">
+                <MessageCircle className="w-5 h-5" />
+                <span className="text-sm">{prediction.comments}</span>
+              </button>
+            </CommentsBottomSheet>
+            
             <button className="flex items-center space-x-1 text-gray-600 hover:text-green-500 transition-colors">
               <Share className="w-5 h-5" />
               <span className="text-sm">{prediction.shares}</span>

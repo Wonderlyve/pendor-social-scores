@@ -5,8 +5,11 @@ import { Button } from '@/components/ui/button';
 import BottomNavigation from '@/components/BottomNavigation';
 import PredictionCard from '@/components/PredictionCard';
 import SideMenu from '@/components/SideMenu';
+import useScrollToTop from '@/hooks/useScrollToTop';
 
 const Index = () => {
+  useScrollToTop();
+  
   const [activeTab, setActiveTab] = useState('trending');
   const [showSideMenu, setShowSideMenu] = useState(false);
 

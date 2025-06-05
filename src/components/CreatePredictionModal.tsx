@@ -94,16 +94,16 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-md mx-auto h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center space-x-2">
             <TrendingUp className="w-5 h-5 text-green-500" />
             <span>Nouveau Pronostic</span>
           </DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 pr-4">
-          <div className="space-y-4">
+        <ScrollArea className="flex-1 px-4">
+          <div className="space-y-4 pb-4">
             {/* Type de pari */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
@@ -280,7 +280,7 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
         </ScrollArea>
 
         {/* Action Buttons */}
-        <div className="flex space-x-3 pt-4 border-t">
+        <div className="flex space-x-3 pt-4 border-t flex-shrink-0">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
