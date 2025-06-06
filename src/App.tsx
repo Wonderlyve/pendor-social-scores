@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import LiveStreams from "./pages/LiveStreams";
 import LiveStream from "./pages/LiveStream";
+import Privacy from "./pages/Privacy";
+import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +25,8 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/lives" element={<LiveStreams />} />
           <Route path="/live/:id" element={<LiveStream />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/about" element={<About />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

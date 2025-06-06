@@ -24,7 +24,7 @@ interface CreatePredictionModalProps {
 }
 
 const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProps) => {
-  const [betType, setBetType] = useState<'simple' | 'combine'>('simple');
+  const [betType, setBetType] = useState<'simple' | 'combine' | 'loto'>('simple');
   const [matches, setMatches] = useState<Match[]>([
     { id: 1, teams: '', prediction: '', odds: '', league: '', time: '' }
   ]);
@@ -32,6 +32,7 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
   const [confidence, setConfidence] = useState(3);
   const [sport, setSport] = useState('');
   const [image, setImage] = useState<File | null>(null);
+  const [lotoNumbers, setLotoNumbers] = useState<number[]>([]);
 
   const addMatch = () => {
     const newMatch: Match = {
@@ -63,15 +64,24 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
     return validOdds.reduce((total, match) => total * parseFloat(match.odds), 1).toFixed(2);
   };
 
+  const toggleLotoNumber = (number: number) => {
+    if (lotoNumbers.includes(number)) {
+      setLotoNumbers(lotoNumbers.filter(n => n !== number));
+    } else if (lotoNumbers.length < 6) {
+      setLotoNumbers([...lotoNumbers, number].sort((a, b) => a - b));
+    }
+  };
+
   const handleSubmit = () => {
     // Logic to submit prediction
     const predictionData = {
       betType,
-      matches: matches.filter(m => m.teams && m.prediction),
+      matches: betType !== 'loto' ? matches.filter(m => m.teams && m.prediction) : [],
       analysis,
       confidence,
       sport,
       totalOdds: betType === 'combine' ? calculateTotalOdds() : null,
+      lotoNumbers: betType === 'loto' ? lotoNumbers : null,
       image
     };
     console.log(predictionData);
@@ -84,9 +94,13 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
     setSport('');
     setImage(null);
     setBetType('simple');
+    setLotoNumbers([]);
   };
 
   const isFormValid = () => {
+    if (betType === 'loto') {
+      return lotoNumbers.length >= 1 && analysis.trim();
+    }
     return matches.some(m => m.teams && m.prediction && m.odds) && 
            analysis.trim() && 
            sport;
@@ -109,28 +123,64 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
               <label className="text-sm font-medium text-gray-700 mb-2 block">
                 Type de pari
               </label>
-              <Select value={betType} onValueChange={(value: 'simple' | 'combine') => setBetType(value)}>
+              <Select value={betType} onValueChange={(value: 'simple' | 'combine' | 'loto') => setBetType(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="simple">Pari Simple</SelectItem>
                   <SelectItem value="combine">Pari Combiné</SelectItem>
+                  <SelectItem value="loto">Pronostic Loto</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Sport */}
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Sport / Compétition
-              </label>
-              <Input
-                placeholder="Ex: Football, Tennis, Basketball..."
-                value={sport}
-                onChange={(e) => setSport(e.target.value)}
-              />
-            </div>
+            {/* Loto Numbers Selection */}
+            {betType === 'loto' && (
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Choisissez vos numéros (1-6 numéros) : {lotoNumbers.length}/6
+                </label>
+                <div className="grid grid-cols-9 gap-1">
+                  {Array.from({ length: 90 }, (_, i) => i + 1).map((number) => (
+                    <button
+                      key={number}
+                      type="button"
+                      onClick={() => toggleLotoNumber(number)}
+                      className={`w-8 h-8 text-xs rounded-full border transition-colors ${
+                        lotoNumbers.includes(number)
+                          ? 'bg-green-500 text-white border-green-500'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                      disabled={!lotoNumbers.includes(number) && lotoNumbers.length >= 6}
+                    >
+                      {number}
+                    </button>
+                  ))}
+                </div>
+                {lotoNumbers.length > 0 && (
+                  <div className="mt-2 p-2 bg-green-50 rounded-lg">
+                    <span className="text-sm font-medium text-green-800">
+                      Numéros sélectionnés: {lotoNumbers.join(', ')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Sport - Only for non-loto bets */}
+            {betType !== 'loto' && (
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Sport / Compétition
+                </label>
+                <Input
+                  placeholder="Ex: Football, Tennis, Basketball..."
+                  value={sport}
+                  onChange={(e) => setSport(e.target.value)}
+                />
+              </div>
+            )}
 
             {/* Cote totale si pari combiné */}
             {betType === 'combine' && (
@@ -144,97 +194,99 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
               </div>
             )}
 
-            {/* Matchs */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-gray-700">
-                  {betType === 'combine' ? 'Matchs du combiné' : 'Match'}
-                </label>
-                {betType === 'combine' && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addMatch}
-                    className="text-xs"
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    Ajouter
-                  </Button>
-                )}
-              </div>
-              
-              <div className="space-y-3">
-                {matches.map((match, index) => (
-                  <Card key={match.id} className="p-3">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-gray-600">
-                          {betType === 'combine' ? `Match ${index + 1}` : 'Match'}
-                        </span>
-                        {betType === 'combine' && matches.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeMatch(match.id)}
-                            className="text-red-500 p-1 h-auto"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        )}
-                      </div>
-                      
-                      <Input
-                        placeholder="Équipes (ex: PSG vs Real Madrid)"
-                        value={match.teams}
-                        onChange={(e) => updateMatch(match.id, 'teams', e.target.value)}
-                        className="text-sm"
-                      />
-                      
-                      <div className="grid grid-cols-2 gap-2">
+            {/* Matchs - Only for non-loto bets */}
+            {betType !== 'loto' && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    {betType === 'combine' ? 'Matchs du combiné' : 'Match'}
+                  </label>
+                  {betType === 'combine' && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addMatch}
+                      className="text-xs"
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Ajouter
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="space-y-3">
+                  {matches.map((match, index) => (
+                    <Card key={match.id} className="p-3">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-gray-600">
+                            {betType === 'combine' ? `Match ${index + 1}` : 'Match'}
+                          </span>
+                          {betType === 'combine' && matches.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeMatch(match.id)}
+                              className="text-red-500 p-1 h-auto"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          )}
+                        </div>
+                        
                         <Input
-                          placeholder="Compétition"
-                          value={match.league}
-                          onChange={(e) => updateMatch(match.id, 'league', e.target.value)}
+                          placeholder="Équipes (ex: PSG vs Real Madrid)"
+                          value={match.teams}
+                          onChange={(e) => updateMatch(match.id, 'teams', e.target.value)}
                           className="text-sm"
                         />
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input
+                            placeholder="Compétition"
+                            value={match.league}
+                            onChange={(e) => updateMatch(match.id, 'league', e.target.value)}
+                            className="text-sm"
+                          />
+                          <Input
+                            placeholder="Heure"
+                            value={match.time}
+                            onChange={(e) => updateMatch(match.id, 'time', e.target.value)}
+                            className="text-sm"
+                          />
+                        </div>
+                        
                         <Input
-                          placeholder="Heure"
-                          value={match.time}
-                          onChange={(e) => updateMatch(match.id, 'time', e.target.value)}
+                          placeholder="Votre pronostic (ex: Victoire PSG)"
+                          value={match.prediction}
+                          onChange={(e) => updateMatch(match.id, 'prediction', e.target.value)}
+                          className="text-sm"
+                        />
+                        
+                        <Input
+                          placeholder="Cote (ex: 2.10)"
+                          value={match.odds}
+                          onChange={(e) => updateMatch(match.id, 'odds', e.target.value)}
+                          type="number"
+                          step="0.01"
                           className="text-sm"
                         />
                       </div>
-                      
-                      <Input
-                        placeholder="Votre pronostic (ex: Victoire PSG)"
-                        value={match.prediction}
-                        onChange={(e) => updateMatch(match.id, 'prediction', e.target.value)}
-                        className="text-sm"
-                      />
-                      
-                      <Input
-                        placeholder="Cote (ex: 2.10)"
-                        value={match.odds}
-                        onChange={(e) => updateMatch(match.id, 'odds', e.target.value)}
-                        type="number"
-                        step="0.01"
-                        className="text-sm"
-                      />
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Analyse */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Analyse détaillée
+                {betType === 'loto' ? 'Analyse de votre grille' : 'Analyse détaillée'}
               </label>
               <Textarea
-                placeholder="Expliquez votre analyse, les statistiques, la forme des équipes..."
+                placeholder={betType === 'loto' ? 'Expliquez votre stratégie, vos numéros fétiches...' : 'Expliquez votre analyse, les statistiques, la forme des équipes...'}
                 value={analysis}
                 onChange={(e) => setAnalysis(e.target.value)}
                 rows={4}

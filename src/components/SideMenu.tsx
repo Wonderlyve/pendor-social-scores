@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { X, User, Home, Search, Video, TrendingUp, Settings, HelpCircle, LogOut, Bell, Bookmark } from 'lucide-react';
+import { X, User, Home, Search, Video, TrendingUp, Settings, HelpCircle, LogOut, Bell, Bookmark, Shield, Info } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -18,7 +18,7 @@ const SideMenu = ({ open, onOpenChange }: SideMenuProps) => {
     { icon: Home, label: 'Accueil', action: () => { navigate('/'); onOpenChange(false); } },
     { icon: User, label: 'Mon Profil', action: () => { navigate('/profile'); onOpenChange(false); } },
     { icon: Search, label: 'Explorer', action: () => {} },
-    { icon: Video, label: 'Lives', action: () => {} },
+    { icon: Video, label: 'Lives', action: () => { navigate('/lives'); onOpenChange(false); } },
     { icon: TrendingUp, label: 'Classements', action: () => {} },
     { icon: Bookmark, label: 'Favoris', action: () => {} },
     { icon: Bell, label: 'Notifications', action: () => {} },
@@ -27,6 +27,8 @@ const SideMenu = ({ open, onOpenChange }: SideMenuProps) => {
   const settingsItems = [
     { icon: Settings, label: 'Paramètres', action: () => {} },
     { icon: HelpCircle, label: 'Aide & Support', action: () => {} },
+    { icon: Shield, label: 'Politique de confidentialité', action: () => { navigate('/privacy'); onOpenChange(false); } },
+    { icon: Info, label: 'À propos', action: () => { navigate('/about'); onOpenChange(false); } },
   ];
 
   return (

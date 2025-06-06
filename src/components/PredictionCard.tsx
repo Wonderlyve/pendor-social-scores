@@ -14,6 +14,7 @@ import PredictionModal from './PredictionModal';
 import CommentsBottomSheet from './CommentsBottomSheet';
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface PredictionCardProps {
   prediction: {
@@ -75,6 +76,30 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
 
   const handleProfileClick = () => {
     navigate('/profile');
+  };
+
+  const handleShare = async () => {
+    const postUrl = `${window.location.origin}/post/${prediction.id}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Pronostic de ${prediction.user.username}`,
+          text: `${prediction.match} - ${prediction.prediction}`,
+          url: postUrl,
+        });
+      } catch (error) {
+        console.log('Partage annulé');
+      }
+    } else {
+      // Fallback: copier le lien
+      try {
+        await navigator.clipboard.writeText(postUrl);
+        toast.success('Lien copié dans le presse-papier !');
+      } catch (error) {
+        toast.error('Impossible de copier le lien');
+      }
+    }
   };
 
   return (
@@ -143,11 +168,11 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
                   <span>Sauvegarder</span>
                 </button>
                 <button 
-                  onClick={() => handleMenuAction('copy')}
+                  onClick={handleShare}
                   className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
                 >
                   <span className="text-2xl">📋</span>
-                  <span>Copier le lien</span>
+                  <span>Partager</span>
                 </button>
                 <button 
                   onClick={() => handleMenuAction('report')}
@@ -187,7 +212,7 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
                 </span>
               )}
             </div>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
               Suivre
             </Button>
           </div>
@@ -265,9 +290,9 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
           <p className="text-gray-700 text-sm leading-relaxed">{prediction.analysis}</p>
         </div>
 
-        {/* Actions - Espacement amélioré */}
+        {/* Actions - Espacement optimisé */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-4">
             <button className="flex items-center space-x-1 text-gray-600 hover:text-red-500 transition-colors">
               <Heart className="w-5 h-5" />
               <span className="text-sm">{prediction.likes}</span>
@@ -280,14 +305,17 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
               </button>
             </CommentsBottomSheet>
             
-            <button className="flex items-center space-x-1 text-gray-600 hover:text-green-500 transition-colors">
+            <button 
+              onClick={handleShare}
+              className="flex items-center space-x-1 text-gray-600 hover:text-green-500 transition-colors"
+            >
               <Share className="w-5 h-5" />
               <span className="text-sm">{prediction.shares}</span>
             </button>
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1" size="sm">
+              <Button className="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 h-7" size="sm">
                 Voir pronos
               </Button>
             </DialogTrigger>
