@@ -1,4 +1,3 @@
-
 import { Heart, MessageCircle, Share, Star, MoreVertical, Play, VolumeX, Volume2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,9 +11,11 @@ import {
 } from '@/components/ui/drawer';
 import PredictionModal from './PredictionModal';
 import CommentsBottomSheet from './CommentsBottomSheet';
+import ProtectedComponent from './ProtectedComponent';
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
 interface PredictionCardProps {
   prediction: {
@@ -52,11 +53,13 @@ interface PredictionCardProps {
 
 const PredictionCard = ({ prediction }: PredictionCardProps) => {
   const navigate = useNavigate();
+  const { requireAuth } = useAuth();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleMenuAction = (action: string) => {
+    if (!requireAuth()) return;
     console.log(`Action: ${action} on prediction ${prediction.id}`);
   };
 
@@ -75,10 +78,13 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
   };
 
   const handleProfileClick = () => {
+    if (!requireAuth()) return;
     navigate('/profile');
   };
 
   const handleShare = async () => {
+    if (!requireAuth()) return;
+    
     const postUrl = `${window.location.origin}/post/${prediction.id}`;
     
     if (navigator.share) {
@@ -92,7 +98,6 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
         console.log('Partage annulé');
       }
     } else {
-      // Fallback: copier le lien
       try {
         await navigator.clipboard.writeText(postUrl);
         toast.success('Lien copié dans le presse-papier !');
@@ -100,6 +105,11 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
         toast.error('Impossible de copier le lien');
       }
     }
+  };
+
+  const handleLike = () => {
+    if (!requireAuth()) return;
+    // Logique de like
   };
 
   return (
@@ -142,62 +152,68 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
           </div>
           
           {/* Menu 3 points */}
-          <Drawer>
-            <DrawerTrigger asChild>
-              <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-                <MoreVertical className="w-4 h-4 text-gray-500" />
-              </button>
-            </DrawerTrigger>
-            <DrawerContent className="h-[75vh]">
-              <DrawerHeader>
-                <DrawerTitle>Options du post</DrawerTitle>
-              </DrawerHeader>
-              <div className="p-4 space-y-3">
-                <button 
-                  onClick={() => handleMenuAction('follow')}
-                  className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
-                >
-                  <span className="text-2xl">👤</span>
-                  <span>Suivre cet utilisateur</span>
+          <ProtectedComponent fallback={
+            <button className="p-1 hover:bg-gray-100 rounded-full transition-colors opacity-50 cursor-not-allowed">
+              <MoreVertical className="w-4 h-4 text-gray-500" />
+            </button>
+          }>
+            <Drawer>
+              <DrawerTrigger asChild>
+                <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+                  <MoreVertical className="w-4 h-4 text-gray-500" />
                 </button>
-                <button 
-                  onClick={() => handleMenuAction('save')}
-                  className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
-                >
-                  <span className="text-2xl">🔖</span>
-                  <span>Sauvegarder</span>
-                </button>
-                <button 
-                  onClick={handleShare}
-                  className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
-                >
-                  <span className="text-2xl">📋</span>
-                  <span>Partager</span>
-                </button>
-                <button 
-                  onClick={() => handleMenuAction('report')}
-                  className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
-                >
-                  <span className="text-2xl">🚨</span>
-                  <span>Signaler</span>
-                </button>
-                <button 
-                  onClick={() => handleMenuAction('hide')}
-                  className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
-                >
-                  <span className="text-2xl">👁️</span>
-                  <span>Masquer ce post</span>
-                </button>
-                <button 
-                  onClick={() => handleMenuAction('block')}
-                  className="w-full text-left p-3 hover:bg-red-50 rounded-lg transition-colors flex items-center space-x-3 text-red-600"
-                >
-                  <span className="text-2xl">🚫</span>
-                  <span>Bloquer l'utilisateur</span>
-                </button>
-              </div>
-            </DrawerContent>
-          </Drawer>
+              </DrawerTrigger>
+              <DrawerContent className="h-[75vh]">
+                <DrawerHeader>
+                  <DrawerTitle>Options du post</DrawerTitle>
+                </DrawerHeader>
+                <div className="p-4 space-y-3">
+                  <button 
+                    onClick={() => handleMenuAction('follow')}
+                    className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
+                  >
+                    <span className="text-2xl">👤</span>
+                    <span>Suivre cet utilisateur</span>
+                  </button>
+                  <button 
+                    onClick={() => handleMenuAction('save')}
+                    className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
+                  >
+                    <span className="text-2xl">🔖</span>
+                    <span>Sauvegarder</span>
+                  </button>
+                  <button 
+                    onClick={handleShare}
+                    className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
+                  >
+                    <span className="text-2xl">📋</span>
+                    <span>Partager</span>
+                  </button>
+                  <button 
+                    onClick={() => handleMenuAction('report')}
+                    className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
+                  >
+                    <span className="text-2xl">🚨</span>
+                    <span>Signaler</span>
+                  </button>
+                  <button 
+                    onClick={() => handleMenuAction('hide')}
+                    className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
+                  >
+                    <span className="text-2xl">👁️</span>
+                    <span>Masquer ce post</span>
+                  </button>
+                  <button 
+                    onClick={() => handleMenuAction('block')}
+                    className="w-full text-left p-3 hover:bg-red-50 rounded-lg transition-colors flex items-center space-x-3 text-red-600"
+                  >
+                    <span className="text-2xl">🚫</span>
+                    <span>Bloquer l'utilisateur</span>
+                  </button>
+                </div>
+              </DrawerContent>
+            </Drawer>
+          </ProtectedComponent>
         </div>
 
         {/* Match Info - Réorganisé */}
@@ -212,9 +228,15 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
                 </span>
               )}
             </div>
-            <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
-              Suivre
-            </Button>
+            <ProtectedComponent fallback={
+              <Button variant="outline" size="sm" className="h-7 px-2 text-xs opacity-50 cursor-not-allowed">
+                Se connecter
+              </Button>
+            }>
+              <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
+                Suivre
+              </Button>
+            </ProtectedComponent>
           </div>
           
           {/* Confidence Stars */}
@@ -293,39 +315,70 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
         {/* Actions - Espacement optimisé */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <button className="flex items-center space-x-1 text-gray-600 hover:text-red-500 transition-colors">
-              <Heart className="w-5 h-5" />
-              <span className="text-sm">{prediction.likes}</span>
-            </button>
+            <ProtectedComponent fallback={
+              <button className="flex items-center space-x-1 text-gray-400 cursor-not-allowed">
+                <Heart className="w-5 h-5" />
+                <span className="text-sm">{prediction.likes}</span>
+              </button>
+            }>
+              <button 
+                onClick={handleLike}
+                className="flex items-center space-x-1 text-gray-600 hover:text-red-500 transition-colors"
+              >
+                <Heart className="w-5 h-5" />
+                <span className="text-sm">{prediction.likes}</span>
+              </button>
+            </ProtectedComponent>
             
-            <CommentsBottomSheet commentsCount={prediction.comments}>
-              <button className="flex items-center space-x-1 text-gray-600 hover:text-blue-500 transition-colors">
+            <ProtectedComponent fallback={
+              <button className="flex items-center space-x-1 text-gray-400 cursor-not-allowed">
                 <MessageCircle className="w-5 h-5" />
                 <span className="text-sm">{prediction.comments}</span>
               </button>
-            </CommentsBottomSheet>
+            }>
+              <CommentsBottomSheet commentsCount={prediction.comments}>
+                <button className="flex items-center space-x-1 text-gray-600 hover:text-blue-500 transition-colors">
+                  <MessageCircle className="w-5 h-5" />
+                  <span className="text-sm">{prediction.comments}</span>
+                </button>
+              </CommentsBottomSheet>
+            </ProtectedComponent>
             
-            <button 
-              onClick={handleShare}
-              className="flex items-center space-x-1 text-gray-600 hover:text-green-500 transition-colors"
-            >
-              <Share className="w-5 h-5" />
-              <span className="text-sm">{prediction.shares}</span>
-            </button>
+            <ProtectedComponent fallback={
+              <button className="flex items-center space-x-1 text-gray-400 cursor-not-allowed">
+                <Share className="w-5 h-5" />
+                <span className="text-sm">{prediction.shares}</span>
+              </button>
+            }>
+              <button 
+                onClick={handleShare}
+                className="flex items-center space-x-1 text-gray-600 hover:text-green-500 transition-colors"
+              >
+                <Share className="w-5 h-5" />
+                <span className="text-sm">{prediction.shares}</span>
+              </button>
+            </ProtectedComponent>
           </div>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 h-7" size="sm">
-                Voir pronos
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Pronostics de {prediction.user.username}</DialogTitle>
-              </DialogHeader>
-              <PredictionModal prediction={prediction} />
-            </DialogContent>
-          </Dialog>
+          
+          <ProtectedComponent fallback={
+            <Button className="bg-gray-400 text-white text-xs px-2 py-1 h-7 cursor-not-allowed" size="sm" disabled>
+              Se connecter
+            </Button>
+          }>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 h-7" size="sm">
+                  Voir pronos
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Pronostics de {prediction.user.username}</DialogTitle>
+                </DialogHeader>
+                <PredictionModal prediction={prediction} />
+              </DialogContent>
+            </Dialog>
+          </ProtectedComponent>
         </div>
       </CardContent>
     </Card>

@@ -2,18 +2,34 @@
 import { Home, Search, Video, User, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import CreatePredictionModal from './CreatePredictionModal';
 
 const BottomNavigation = () => {
   const navigate = useNavigate();
+  const { user, requireAuth } = useAuth();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  
+  const handleCreateClick = () => {
+    if (requireAuth()) {
+      setShowCreateModal(true);
+    }
+  };
+
+  const handleProfileClick = () => {
+    if (user) {
+      navigate('/profile');
+    } else {
+      navigate('/auth');
+    }
+  };
   
   const navItems = [
     { icon: Home, label: 'Accueil', active: true, action: () => navigate('/') },
     { icon: Search, label: 'Explorer', active: false, action: () => {} },
-    { icon: Plus, label: '', active: false, action: () => setShowCreateModal(true), isCenter: true },
+    { icon: Plus, label: '', active: false, action: handleCreateClick, isCenter: true },
     { icon: Video, label: 'Lives', active: false, action: () => navigate('/lives') },
-    { icon: User, label: 'Profil', active: false, action: () => navigate('/profile') },
+    { icon: User, label: user ? 'Profil' : 'Connexion', active: false, action: handleProfileClick },
   ];
 
   return (
@@ -27,7 +43,9 @@ const BottomNavigation = () => {
                 <div key={index} className="flex-1 flex justify-center">
                   <button
                     onClick={item.action}
-                    className="w-14 h-14 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center -mt-6 shadow-lg border-4 border-white transition-transform hover:scale-105"
+                    className={`w-14 h-14 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center -mt-6 shadow-lg border-4 border-white transition-transform hover:scale-105 ${
+                      !user ? 'opacity-50' : ''
+                    }`}
                   >
                     <Icon className="w-6 h-6 text-white" />
                   </button>
@@ -52,10 +70,12 @@ const BottomNavigation = () => {
         </div>
       </div>
       
-      <CreatePredictionModal 
-        open={showCreateModal} 
-        onOpenChange={setShowCreateModal} 
-      />
+      {user && (
+        <CreatePredictionModal 
+          open={showCreateModal} 
+          onOpenChange={setShowCreateModal} 
+        />
+      )}
     </>
   );
 };

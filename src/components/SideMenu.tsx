@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SideMenuProps {
   open: boolean;
@@ -13,6 +14,7 @@ interface SideMenuProps {
 
 const SideMenu = ({ open, onOpenChange }: SideMenuProps) => {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   const menuItems = [
     { icon: Home, label: 'Accueil', action: () => { navigate('/'); onOpenChange(false); } },
@@ -30,6 +32,12 @@ const SideMenu = ({ open, onOpenChange }: SideMenuProps) => {
     { icon: Shield, label: 'Politique de confidentialité', action: () => { navigate('/privacy'); onOpenChange(false); } },
     { icon: Info, label: 'À propos', action: () => { navigate('/about'); onOpenChange(false); } },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    onOpenChange(false);
+    navigate('/');
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -49,17 +57,32 @@ const SideMenu = ({ open, onOpenChange }: SideMenuProps) => {
           </SheetHeader>
 
           {/* User Info */}
-          <div className="p-6 pb-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold">P</span>
-              </div>
-              <div>
-                <p className="font-semibold text-gray-900">PronoExpert</p>
-                <p className="text-sm text-gray-500">Taux de réussite: 86%</p>
+          {user ? (
+            <div className="p-6 pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold">
+                    {user.email?.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">
+                    {user.user_metadata?.display_name || user.email?.split('@')[0]}
+                  </p>
+                  <p className="text-sm text-gray-500">Connecté</p>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-6 pb-4">
+              <Button 
+                onClick={() => { navigate('/auth'); onOpenChange(false); }}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                Se connecter
+              </Button>
+            </div>
+          )}
 
           <Separator />
 
@@ -103,15 +126,18 @@ const SideMenu = ({ open, onOpenChange }: SideMenuProps) => {
           </div>
 
           {/* Logout */}
-          <div className="p-4 border-t">
-            <Button
-              variant="outline"
-              className="w-full justify-start space-x-3 h-12 text-red-600 border-red-200 hover:bg-red-50"
-            >
-              <LogOut className="w-5 h-5" />
-              <span>Déconnexion</span>
-            </Button>
-          </div>
+          {user && (
+            <div className="p-4 border-t">
+              <Button
+                variant="outline"
+                className="w-full justify-start space-x-3 h-12 text-red-600 border-red-200 hover:bg-red-50"
+                onClick={handleSignOut}
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Déconnexion</span>
+              </Button>
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>
