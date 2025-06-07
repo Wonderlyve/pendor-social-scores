@@ -1,3 +1,4 @@
+
 import { Heart, MessageCircle, Share, Star, MoreVertical, Play, VolumeX, Volume2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { usePosts } from '@/hooks/usePosts';
 
 interface PredictionCardProps {
   prediction: {
@@ -54,8 +56,11 @@ interface PredictionCardProps {
 const PredictionCard = ({ prediction }: PredictionCardProps) => {
   const navigate = useNavigate();
   const { requireAuth } = useAuth();
+  const { likePost } = usePosts();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(prediction.likes);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleMenuAction = (action: string) => {
@@ -107,9 +112,23 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
     }
   };
 
-  const handleLike = () => {
+  const handleLike = async () => {
     if (!requireAuth()) return;
-    // Logique de like
+    
+    try {
+      await likePost(prediction.id.toString());
+      
+      // Update local state optimistically
+      if (isLiked) {
+        setLikesCount(prev => prev - 1);
+        setIsLiked(false);
+      } else {
+        setLikesCount(prev => prev + 1);
+        setIsLiked(true);
+      }
+    } catch (error) {
+      console.error('Error liking post:', error);
+    }
   };
 
   return (
@@ -216,7 +235,7 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
           </ProtectedComponent>
         </div>
 
-        {/* Match Info - Réorganisé */}
+        {/* Match Info */}
         <div className="mb-3">
           <div className="font-semibold text-lg text-gray-900 mb-2">{prediction.match}</div>
           <div className="flex items-center justify-between mb-2">
@@ -270,7 +289,7 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
                   onPause={() => setIsPlaying(false)}
                   controls={false}
                 >
-                  <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4" />
+                  <source src={prediction.video} type="video/mp4" />
                 </video>
                 
                 {/* Play Button */}
@@ -299,7 +318,7 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
               </div>
             ) : prediction.image && (
               <img
-                src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&h=600&fit=crop"
+                src={prediction.image}
                 alt="Contenu du post"
                 className="w-full h-48 object-cover"
               />
@@ -312,21 +331,23 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
           <p className="text-gray-700 text-sm leading-relaxed">{prediction.analysis}</p>
         </div>
 
-        {/* Actions - Espacement optimisé */}
+        {/* Actions */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <ProtectedComponent fallback={
               <button className="flex items-center space-x-1 text-gray-400 cursor-not-allowed">
                 <Heart className="w-5 h-5" />
-                <span className="text-sm">{prediction.likes}</span>
+                <span className="text-sm">{likesCount}</span>
               </button>
             }>
               <button 
                 onClick={handleLike}
-                className="flex items-center space-x-1 text-gray-600 hover:text-red-500 transition-colors"
+                className={`flex items-center space-x-1 transition-colors ${
+                  isLiked ? 'text-red-500' : 'text-gray-600 hover:text-red-500'
+                }`}
               >
-                <Heart className="w-5 h-5" />
-                <span className="text-sm">{prediction.likes}</span>
+                <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
+                <span className="text-sm">{likesCount}</span>
               </button>
             </ProtectedComponent>
             

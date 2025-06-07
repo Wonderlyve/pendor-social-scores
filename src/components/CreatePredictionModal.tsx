@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { usePosts } from '@/hooks/usePosts';
 
 interface Match {
   id: number;
@@ -24,6 +25,7 @@ interface CreatePredictionModalProps {
 }
 
 const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProps) => {
+  const { createPost } = usePosts();
   const [betType, setBetType] = useState<'simple' | 'combine' | 'loto'>('simple');
   const [matches, setMatches] = useState<Match[]>([
     { id: 1, teams: '', prediction: '', odds: '', league: '', time: '' }
@@ -33,6 +35,7 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
   const [sport, setSport] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [lotoNumbers, setLotoNumbers] = useState<number[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const addMatch = () => {
     const newMatch: Match = {
@@ -72,22 +75,50 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
     }
   };
 
-  const handleSubmit = () => {
-    // Logic to submit prediction
-    const predictionData = {
-      betType,
-      matches: betType !== 'loto' ? matches.filter(m => m.teams && m.prediction) : [],
-      analysis,
-      confidence,
-      sport,
-      totalOdds: betType === 'combine' ? calculateTotalOdds() : null,
-      lotoNumbers: betType === 'loto' ? lotoNumbers : null,
-      image
-    };
-    console.log(predictionData);
-    onOpenChange(false);
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
     
-    // Reset form
+    try {
+      let postData;
+      
+      if (betType === 'loto') {
+        postData = {
+          analysis,
+          confidence,
+          odds: 0, // Pas de cote pour le loto
+          sport: 'Loto',
+          prediction_text: `Numéros: ${lotoNumbers.join(', ')}`
+        };
+      } else {
+        const validMatches = matches.filter(m => m.teams && m.prediction && m.odds);
+        if (validMatches.length === 0) {
+          return;
+        }
+
+        const totalOdds = betType === 'combine' ? parseFloat(calculateTotalOdds()) : parseFloat(validMatches[0].odds);
+        
+        postData = {
+          sport,
+          match_teams: validMatches.map(m => m.teams).join(' | '),
+          prediction_text: validMatches.map(m => m.prediction).join(' | '),
+          analysis,
+          confidence,
+          odds: totalOdds
+        };
+      }
+
+      const result = await createPost(postData);
+      
+      if (result) {
+        onOpenChange(false);
+        resetForm();
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
     setMatches([{ id: 1, teams: '', prediction: '', odds: '', league: '', time: '' }]);
     setAnalysis('');
     setConfidence(3);
@@ -337,15 +368,16 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
             variant="outline"
             onClick={() => onOpenChange(false)}
             className="flex-1"
+            disabled={isSubmitting}
           >
             Annuler
           </Button>
           <Button
             onClick={handleSubmit}
             className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-            disabled={!isFormValid()}
+            disabled={!isFormValid() || isSubmitting}
           >
-            Publier
+            {isSubmitting ? 'Publication...' : 'Publier'}
           </Button>
         </div>
       </DialogContent>

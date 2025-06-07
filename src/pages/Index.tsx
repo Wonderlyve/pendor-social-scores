@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Heart, MessageCircle, Share, TrendingUp, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,125 +7,38 @@ import BottomNavigation from '@/components/BottomNavigation';
 import PredictionCard from '@/components/PredictionCard';
 import SideMenu from '@/components/SideMenu';
 import useScrollToTop from '@/hooks/useScrollToTop';
+import { usePosts } from '@/hooks/usePosts';
 
 const Index = () => {
   useScrollToTop();
   
   const [activeTab, setActiveTab] = useState('trending');
   const [showSideMenu, setShowSideMenu] = useState(false);
+  const { posts, loading } = usePosts();
 
-  const mockPredictions = [
-    {
-      id: 1,
-      user: {
-        username: '@prono_king',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-        badge: 'Confirmé',
-        badgeColor: 'bg-yellow-500'
-      },
-      match: 'PSG vs Real Madrid',
-      prediction: 'Victoire PSG',
-      odds: '2.10',
-      confidence: 4,
-      analysis: 'PSG en forme à domicile, Mbappé en grande forme. Real sans Benzema. Défense madrilène fragile sur les transitions rapides.',
-      likes: 127,
-      comments: 23,
-      shares: 8,
-      successRate: 78,
-      timeAgo: '2h',
-      sport: 'Football',
-      image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&h=600&fit=crop'
+  // Convert posts from database to the format expected by PredictionCard
+  const convertPostToPrediction = (post: any) => ({
+    id: post.id,
+    user: {
+      username: post.username || '@utilisateur',
+      avatar: post.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + post.user_id,
+      badge: post.badge || 'Novice',
+      badgeColor: post.badge === 'Pro' ? 'bg-blue-500' : post.badge === 'Confirmé' ? 'bg-yellow-500' : 'bg-green-500'
     },
-    {
-      id: 2,
-      user: {
-        username: '@sport_analyst',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b332c3c3?w=100&h=100&fit=crop&crop=face',
-        badge: 'Pro',
-        badgeColor: 'bg-blue-500'
-      },
-      match: 'Pari Combiné',
-      prediction: 'Triple combiné',
-      odds: '1.85',
-      totalOdds: '1.25',
-      confidence: 5,
-      analysis: 'Combiné sûr avec trois équipes en grande forme. Analyse détaillée de chaque match dans les pronostics.',
-      likes: 89,
-      comments: 15,
-      shares: 5,
-      successRate: 65,
-      timeAgo: '4h',
-      sport: 'Football',
-      matches: [
-        {
-          id: 1,
-          teams: 'Betis Séville vs Jagiellonia',
-          prediction: 'Victoire Betis',
-          odds: '1.45',
-          league: 'Conference League',
-          time: '18:45'
-        },
-        {
-          id: 2,
-          teams: 'Manchester City vs Inter',
-          prediction: 'Plus de 2.5 buts',
-          odds: '1.65',
-          league: 'Champions League',
-          time: '21:00'
-        },
-        {
-          id: 3,
-          teams: 'Barcelona vs Bayern',
-          prediction: 'Barcelone ou match nul',
-          odds: '1.35',
-          league: 'Champions League',
-          time: '21:00'
-        }
-      ]
-    },
-    {
-      id: 3,
-      user: {
-        username: '@tennis_pro',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-        badge: 'Novice',
-        badgeColor: 'bg-green-500'
-      },
-      match: 'Djokovic vs Alcaraz',
-      prediction: 'Victoire Alcaraz en 3 sets',
-      odds: '3.20',
-      confidence: 5,
-      analysis: 'Alcaraz très en forme sur terre battue, Djokovic pas à 100%. Le jeune espagnol a les armes pour battre le serbe.',
-      likes: 234,
-      comments: 67,
-      shares: 19,
-      successRate: 72,
-      timeAgo: '6h',
-      sport: 'Tennis',
-      video: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'
-    },
-    {
-      id: 4,
-      user: {
-        username: '@basket_expert',
-        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face',
-        badge: 'Pro',
-        badgeColor: 'bg-blue-500'
-      },
-      match: 'Lakers vs Warriors',
-      prediction: 'Plus de 220 points',
-      odds: '1.95',
-      confidence: 3,
-      analysis: 'Deux attaques prolifiques, défenses moyennes. Le rythme devrait être élevé avec beaucoup de possessions.',
-      likes: 156,
-      comments: 41,
-      shares: 12,
-      successRate: 83,
-      timeAgo: '1h',
-      sport: 'Basketball',
-      image: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&h=600&fit=crop'
-    }
-  ];
+    match: post.match_teams || post.sport || 'Match',
+    prediction: post.prediction_text || 'Pronostic',
+    odds: post.odds?.toString() || '1.00',
+    confidence: post.confidence || 3,
+    analysis: post.analysis || post.content || '',
+    likes: post.like_count || post.likes || 0,
+    comments: post.comment_count || post.comments || 0,
+    shares: post.shares || 0,
+    successRate: 75, // Default value, could be calculated
+    timeAgo: new Date(post.created_at).toLocaleDateString(),
+    sport: post.sport || 'Sport',
+    image: post.image_url,
+    video: post.video_url
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -212,7 +126,7 @@ const Index = () => {
                     <div className="text-xs opacity-80">Taux moyen</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-bold text-lg">1,247</div>
+                    <div className="font-bold text-lg">{posts.length}</div>
                     <div className="text-xs opacity-80">Pronos actifs</div>
                   </div>
                   <div className="text-center">
@@ -225,9 +139,24 @@ const Index = () => {
 
             {/* Predictions Feed */}
             <div className="space-y-4">
-              {mockPredictions.map((prediction) => (
-                <PredictionCard key={prediction.id} prediction={prediction} />
-              ))}
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="text-gray-500">Chargement des pronostics...</div>
+                </div>
+              ) : posts.length > 0 ? (
+                posts.map((post) => (
+                  <PredictionCard key={post.id} prediction={convertPostToPrediction(post)} />
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 mb-4">
+                    <TrendingUp className="w-16 h-16 mx-auto" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-600 mb-2">Aucun pronostic</h3>
+                  <p className="text-gray-500 mb-4">Soyez le premier à partager un pronostic !</p>
+                  <Button>Créer un pronostic</Button>
+                </div>
+              )}
             </div>
           </>
         )}
