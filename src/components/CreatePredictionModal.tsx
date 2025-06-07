@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { X, Image, Video, Calendar, TrendingUp, Plus, Trash2 } from 'lucide-react';
+import { X, Calendar, TrendingUp, Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePosts } from '@/hooks/usePosts';
+import FileUpload from '@/components/FileUpload';
 
 interface Match {
   id: number;
@@ -33,7 +34,8 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
   const [analysis, setAnalysis] = useState('');
   const [confidence, setConfidence] = useState(3);
   const [sport, setSport] = useState('');
-  const [image, setImage] = useState<File | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
   const [lotoNumbers, setLotoNumbers] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -87,7 +89,9 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
           confidence,
           odds: 0, // Pas de cote pour le loto
           sport: 'Loto',
-          prediction_text: `Numéros: ${lotoNumbers.join(', ')}`
+          prediction_text: `Numéros: ${lotoNumbers.join(', ')}`,
+          image_file: selectedImage,
+          video_file: selectedVideo
         };
       } else {
         const validMatches = matches.filter(m => m.teams && m.prediction && m.odds);
@@ -103,7 +107,9 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
           prediction_text: validMatches.map(m => m.prediction).join(' | '),
           analysis,
           confidence,
-          odds: totalOdds
+          odds: totalOdds,
+          image_file: selectedImage,
+          video_file: selectedVideo
         };
       }
 
@@ -123,7 +129,8 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
     setAnalysis('');
     setConfidence(3);
     setSport('');
-    setImage(null);
+    setSelectedImage(null);
+    setSelectedVideo(null);
     setBetType('simple');
     setLotoNumbers([]);
   };
@@ -346,18 +353,14 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
               </div>
             </div>
 
-            {/* Media Options */}
+            {/* Media Upload */}
             <Card className="p-3">
-              <div className="flex space-x-3">
-                <Button variant="outline" size="sm" className="flex-1 text-xs">
-                  <Image className="w-4 h-4 mr-1" />
-                  Photo
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 text-xs">
-                  <Video className="w-4 h-4 mr-1" />
-                  Vidéo
-                </Button>
-              </div>
+              <FileUpload
+                onImageSelect={setSelectedImage}
+                onVideoSelect={setSelectedVideo}
+                selectedImage={selectedImage}
+                selectedVideo={selectedVideo}
+              />
             </Card>
           </div>
         </ScrollArea>

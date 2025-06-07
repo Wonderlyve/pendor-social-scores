@@ -36,8 +36,16 @@ export const usePosts = () => {
   const fetchPosts = async () => {
     try {
       const { data, error } = await supabase
-        .from('posts_with_profiles')
-        .select('*')
+        .from('posts')
+        .select(`
+          *,
+          profiles:user_id (
+            username,
+            display_name,
+            avatar_url,
+            badge
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -46,12 +54,52 @@ export const usePosts = () => {
         return;
       }
 
-      setPosts(data || []);
+      // Transform data to match Post interface
+      const transformedPosts = data?.map((post: any) => ({
+        ...post,
+        username: post.profiles?.username,
+        display_name: post.profiles?.display_name,
+        avatar_url: post.profiles?.avatar_url,
+        badge: post.profiles?.badge,
+        like_count: post.likes,
+        comment_count: post.comments
+      })) || [];
+
+      setPosts(transformedPosts);
     } catch (error) {
       console.error('Error:', error);
       toast.error('Erreur lors du chargement des posts');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const uploadFile = async (file: File, bucket: string): Promise<string | null> => {
+    if (!user) return null;
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(fileName, file);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error('Erreur lors de l\'upload du fichier');
+        return null;
+      }
+
+      const { data } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(fileName);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast.error('Erreur lors de l\'upload du fichier');
+      return null;
     }
   };
 
@@ -62,8 +110,8 @@ export const usePosts = () => {
     analysis: string;
     odds: number;
     confidence: number;
-    image_url?: string;
-    video_url?: string;
+    image_file?: File;
+    video_file?: File;
   }) => {
     if (!user) {
       toast.error('Vous devez être connecté pour créer un post');
@@ -71,6 +119,19 @@ export const usePosts = () => {
     }
 
     try {
+      let image_url = null;
+      let video_url = null;
+
+      // Upload image if provided
+      if (postData.image_file) {
+        image_url = await uploadFile(postData.image_file, 'post-images');
+      }
+
+      // Upload video if provided
+      if (postData.video_file) {
+        video_url = await uploadFile(postData.video_file, 'post-videos');
+      }
+
       const { data, error } = await supabase
         .from('posts')
         .insert({
@@ -82,8 +143,8 @@ export const usePosts = () => {
           analysis: postData.analysis,
           odds: postData.odds,
           confidence: postData.confidence,
-          image_url: postData.image_url,
-          video_url: postData.video_url,
+          image_url,
+          video_url,
           likes: 0,
           comments: 0,
           shares: 0
