@@ -6,15 +6,16 @@ import { Button } from '@/components/ui/button';
 import BottomNavigation from '@/components/BottomNavigation';
 import PredictionCard from '@/components/PredictionCard';
 import SideMenu from '@/components/SideMenu';
+import PostSkeleton from '@/optimization/PostSkeleton';
 import useScrollToTop from '@/hooks/useScrollToTop';
-import { usePosts } from '@/hooks/usePosts';
+import { useOptimizedPosts } from '@/hooks/useOptimizedPosts';
 
 const Index = () => {
   useScrollToTop();
   
   const [activeTab, setActiveTab] = useState('trending');
   const [showSideMenu, setShowSideMenu] = useState(false);
-  const { posts, loading } = usePosts();
+  const { posts, loading, initialLoading, hasMore } = useOptimizedPosts();
 
   // Convert posts from database to the format expected by PredictionCard
   const convertPostToPrediction = (post: any) => ({
@@ -139,14 +140,37 @@ const Index = () => {
 
             {/* Predictions Feed */}
             <div className="space-y-4">
-              {loading ? (
-                <div className="text-center py-8">
-                  <div className="text-gray-500">Chargement des pronostics...</div>
-                </div>
+              {initialLoading ? (
+                // Show skeleton loaders during initial loading
+                <>
+                  {[...Array(5)].map((_, index) => (
+                    <PostSkeleton key={index} />
+                  ))}
+                </>
               ) : posts.length > 0 ? (
-                posts.map((post) => (
-                  <PredictionCard key={post.id} prediction={convertPostToPrediction(post)} />
-                ))
+                <>
+                  {posts.map((post) => (
+                    <PredictionCard key={post.id} prediction={convertPostToPrediction(post)} />
+                  ))}
+                  
+                  {/* Loading indicator for more posts */}
+                  {loading && hasMore && (
+                    <div className="space-y-4">
+                      {[...Array(3)].map((_, index) => (
+                        <PostSkeleton key={`loading-${index}`} />
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* End of posts message */}
+                  {!hasMore && posts.length > 0 && (
+                    <div className="text-center py-8">
+                      <div className="text-gray-500 text-sm">
+                        🎯 Vous avez vu tous les pronostics !
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-12">
                   <div className="text-gray-400 mb-4">
