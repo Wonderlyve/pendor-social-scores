@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { X, Calendar, TrendingUp, Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -9,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useOptimizedPosts } from '@/hooks/useOptimizedPosts';
 import FileUpload from '@/components/FileUpload';
+import { toast } from 'sonner';
 
 interface Match {
   id: number;
@@ -87,7 +89,7 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
         postData = {
           analysis,
           confidence,
-          odds: 0, // Pas de cote pour le loto
+          odds: 0,
           sport: 'Loto',
           prediction_text: `Numéros: ${lotoNumbers.join(', ')}`,
           image_file: selectedImage,
@@ -253,12 +255,13 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
                   )}
                 </div>
                 
+                {/* Affichage en liste verticale pour les paris combinés */}
                 <div className="space-y-3">
                   {matches.map((match, index) => (
                     <Card key={match.id} className="p-3">
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-gray-600">
+                          <span className="text-sm font-medium text-gray-600">
                             {betType === 'combine' ? `Match ${index + 1}` : 'Match'}
                           </span>
                           {betType === 'combine' && matches.length > 1 && (
@@ -274,43 +277,45 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
                           )}
                         </div>
                         
-                        <Input
-                          placeholder="Équipes (ex: PSG vs Real Madrid)"
-                          value={match.teams}
-                          onChange={(e) => updateMatch(match.id, 'teams', e.target.value)}
-                          className="text-sm"
-                        />
-                        
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-2">
                           <Input
-                            placeholder="Compétition"
-                            value={match.league}
-                            onChange={(e) => updateMatch(match.id, 'league', e.target.value)}
+                            placeholder="Équipes (ex: PSG vs Real Madrid)"
+                            value={match.teams}
+                            onChange={(e) => updateMatch(match.id, 'teams', e.target.value)}
                             className="text-sm"
                           />
+                          
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input
+                              placeholder="Compétition"
+                              value={match.league}
+                              onChange={(e) => updateMatch(match.id, 'league', e.target.value)}
+                              className="text-sm"
+                            />
+                            <Input
+                              placeholder="Heure"
+                              value={match.time}
+                              onChange={(e) => updateMatch(match.id, 'time', e.target.value)}
+                              className="text-sm"
+                            />
+                          </div>
+                          
                           <Input
-                            placeholder="Heure"
-                            value={match.time}
-                            onChange={(e) => updateMatch(match.id, 'time', e.target.value)}
+                            placeholder="Votre pronostic (ex: Victoire PSG)"
+                            value={match.prediction}
+                            onChange={(e) => updateMatch(match.id, 'prediction', e.target.value)}
+                            className="text-sm"
+                          />
+                          
+                          <Input
+                            placeholder="Cote (ex: 2.10)"
+                            value={match.odds}
+                            onChange={(e) => updateMatch(match.id, 'odds', e.target.value)}
+                            type="number"
+                            step="0.01"
                             className="text-sm"
                           />
                         </div>
-                        
-                        <Input
-                          placeholder="Votre pronostic (ex: Victoire PSG)"
-                          value={match.prediction}
-                          onChange={(e) => updateMatch(match.id, 'prediction', e.target.value)}
-                          className="text-sm"
-                        />
-                        
-                        <Input
-                          placeholder="Cote (ex: 2.10)"
-                          value={match.odds}
-                          onChange={(e) => updateMatch(match.id, 'odds', e.target.value)}
-                          type="number"
-                          step="0.01"
-                          className="text-sm"
-                        />
                       </div>
                     </Card>
                   ))}

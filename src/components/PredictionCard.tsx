@@ -1,5 +1,5 @@
 
-import { Heart, MessageCircle, Share, Star, MoreVertical, Play, VolumeX, Volume2 } from 'lucide-react';
+import { Heart, MessageCircle, Share, Star, MoreVertical, Play, VolumeX, Volume2, Pause } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -17,7 +17,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { usePosts } from '@/hooks/usePosts';
+import { useOptimizedPosts } from '@/hooks/useOptimizedPosts';
 
 interface PredictionCardProps {
   prediction: {
@@ -56,7 +56,7 @@ interface PredictionCardProps {
 const PredictionCard = ({ prediction }: PredictionCardProps) => {
   const navigate = useNavigate();
   const { requireAuth } = useAuth();
-  const { likePost } = usePosts();
+  const { likePost } = useOptimizedPosts();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
@@ -68,14 +68,20 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
     console.log(`Action: ${action} on prediction ${prediction.id}`);
   };
 
-  const handlePlayVideo = () => {
+  const handleVideoClick = () => {
     if (videoRef.current) {
-      videoRef.current.play();
-      setIsPlaying(true);
+      if (isPlaying) {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        videoRef.current.play();
+        setIsPlaying(true);
+      }
     }
   };
 
-  const toggleMute = () => {
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Empêcher le clic de se propager au conteneur vidéo
     if (videoRef.current) {
       videoRef.current.muted = !videoRef.current.muted;
       setIsMuted(videoRef.current.muted);
@@ -279,7 +285,10 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
         {(prediction.image || prediction.video) && (
           <div className="mb-4 rounded-lg overflow-hidden relative">
             {prediction.video ? (
-              <div className="relative">
+              <div 
+                className="relative cursor-pointer"
+                onClick={handleVideoClick}
+              >
                 <video
                   ref={videoRef}
                   className="w-full h-48 object-cover"
@@ -292,17 +301,16 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
                   <source src={prediction.video} type="video/mp4" />
                 </video>
                 
-                {/* Play Button */}
-                {!isPlaying && (
-                  <button 
-                    onClick={handlePlayVideo}
-                    className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 transition-opacity"
-                  >
-                    <div className="w-16 h-16 bg-white bg-opacity-90 rounded-full flex items-center justify-center">
+                {/* Play/Pause Button */}
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 transition-opacity">
+                  <div className="w-16 h-16 bg-white bg-opacity-90 rounded-full flex items-center justify-center">
+                    {isPlaying ? (
+                      <Pause className="w-8 h-8 text-gray-800" />
+                    ) : (
                       <Play className="w-8 h-8 text-gray-800 ml-1" />
-                    </div>
-                  </button>
-                )}
+                    )}
+                  </div>
+                </div>
                 
                 {/* Mute Button */}
                 <button 
