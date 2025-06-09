@@ -328,6 +328,7 @@ export type Database = {
       }
       posts: {
         Row: {
+          analysis: string | null
           average_rating: number | null
           comments: number | null
           confidence: number
@@ -336,13 +337,17 @@ export type Database = {
           id: string
           image_url: string | null
           likes: number | null
+          match_teams: string | null
           odds: number
+          prediction_text: string | null
           shares: number | null
+          sport: string | null
           total_ratings: number | null
           user_id: string
           video_url: string | null
         }
         Insert: {
+          analysis?: string | null
           average_rating?: number | null
           comments?: number | null
           confidence: number
@@ -351,13 +356,17 @@ export type Database = {
           id?: string
           image_url?: string | null
           likes?: number | null
+          match_teams?: string | null
           odds: number
+          prediction_text?: string | null
           shares?: number | null
+          sport?: string | null
           total_ratings?: number | null
           user_id: string
           video_url?: string | null
         }
         Update: {
+          analysis?: string | null
           average_rating?: number | null
           comments?: number | null
           confidence?: number
@@ -366,8 +375,11 @@ export type Database = {
           id?: string
           image_url?: string | null
           likes?: number | null
+          match_teams?: string | null
           odds?: number
+          prediction_text?: string | null
           shares?: number | null
+          sport?: string | null
           total_ratings?: number | null
           user_id?: string
           video_url?: string | null

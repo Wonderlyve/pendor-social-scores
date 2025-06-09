@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { X, Calendar, TrendingUp, Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -8,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { usePosts } from '@/hooks/usePosts';
+import { useOptimizedPosts } from '@/hooks/useOptimizedPosts';
 import FileUpload from '@/components/FileUpload';
 
 interface Match {
@@ -26,7 +25,8 @@ interface CreatePredictionModalProps {
 }
 
 const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProps) => {
-  const { createPost } = usePosts();
+  const { createPost } = useOptimizedPosts();
+  
   const [betType, setBetType] = useState<'simple' | 'combine' | 'loto'>('simple');
   const [matches, setMatches] = useState<Match[]>([
     { id: 1, teams: '', prediction: '', odds: '', league: '', time: '' }
@@ -96,6 +96,7 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
       } else {
         const validMatches = matches.filter(m => m.teams && m.prediction && m.odds);
         if (validMatches.length === 0) {
+          toast.error('Veuillez remplir au moins un match complet');
           return;
         }
 
@@ -119,6 +120,9 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
         onOpenChange(false);
         resetForm();
       }
+    } catch (error) {
+      console.error('Error creating post:', error);
+      toast.error('Erreur lors de la création du post');
     } finally {
       setIsSubmitting(false);
     }
@@ -173,7 +177,6 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
               </Select>
             </div>
 
-            {/* Loto Numbers Selection */}
             {betType === 'loto' && (
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
@@ -206,7 +209,6 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
               </div>
             )}
 
-            {/* Sport - Only for non-loto bets */}
             {betType !== 'loto' && (
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
@@ -220,7 +222,6 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
               </div>
             )}
 
-            {/* Cote totale si pari combiné */}
             {betType === 'combine' && (
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
                 <div className="flex items-center justify-between">
@@ -232,7 +233,6 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
               </div>
             )}
 
-            {/* Matchs - Only for non-loto bets */}
             {betType !== 'loto' && (
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -318,7 +318,6 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
               </div>
             )}
 
-            {/* Analyse */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
                 {betType === 'loto' ? 'Analyse de votre grille' : 'Analyse détaillée'}
@@ -332,7 +331,6 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
               />
             </div>
 
-            {/* Confidence */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
                 Niveau de confiance: {confidence}/5
@@ -353,7 +351,6 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
               </div>
             </div>
 
-            {/* Media Upload */}
             <Card className="p-3">
               <FileUpload
                 onImageSelect={setSelectedImage}
@@ -365,7 +362,6 @@ const CreatePredictionModal = ({ open, onOpenChange }: CreatePredictionModalProp
           </div>
         </ScrollArea>
 
-        {/* Action Buttons */}
         <div className="flex space-x-3 pt-4 border-t flex-shrink-0">
           <Button
             variant="outline"

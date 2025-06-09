@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { ImageOptimizer } from '@/optimization/ImageOptimizer';
-import { VideoOptimizer } from '@/optimization/VideoOptimizer';
 
 export interface Post {
   id: string;
