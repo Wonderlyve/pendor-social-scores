@@ -1,5 +1,5 @@
 
-import { Heart, MessageCircle, Share, Star, MoreVertical, Play, VolumeX, Volume2 } from 'lucide-react';
+import { Heart, MessageCircle, Share, Star, MoreVertical, Play, VolumeX, Volume2, UserPlus, UserCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -13,11 +13,12 @@ import {
 import PredictionModal from './PredictionModal';
 import CommentsBottomSheet from './CommentsBottomSheet';
 import ProtectedComponent from './ProtectedComponent';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { usePosts } from '@/hooks/usePosts';
+import { useOptimizedPosts } from '@/hooks/useOptimizedPosts';
+import { useFollow } from '@/hooks/useFollow';
 
 interface PredictionCardProps {
   prediction: {
@@ -55,13 +56,27 @@ interface PredictionCardProps {
 
 const PredictionCard = ({ prediction }: PredictionCardProps) => {
   const navigate = useNavigate();
-  const { requireAuth } = useAuth();
-  const { likePost } = usePosts();
+  const { requireAuth, user } = useAuth();
+  const { likePost } = useOptimizedPosts();
+  const { followUser, isFollowing } = useFollow();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(prediction.likes);
+  const [isFollowingUser, setIsFollowingUser] = useState(false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Check if following user on mount
+  useEffect(() => {
+    const checkFollowStatus = async () => {
+      if (user && prediction.user.username) {
+        const following = await isFollowing(prediction.user.username);
+        setIsFollowingUser(following);
+      }
+    };
+    checkFollowStatus();
+  }, [user, prediction.user.username, isFollowing]);
 
   const handleMenuAction = (action: string) => {
     if (!requireAuth()) return;
@@ -131,6 +146,20 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
     }
   };
 
+  const handleFollow = async () => {
+    if (!requireAuth()) return;
+    
+    setIsFollowLoading(true);
+    try {
+      const newFollowStatus = await followUser(prediction.user.username);
+      setIsFollowingUser(newFollowStatus);
+    } catch (error) {
+      console.error('Error following user:', error);
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
+
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow">
       <CardContent className="p-4">
@@ -188,11 +217,21 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
                 </DrawerHeader>
                 <div className="p-4 space-y-3">
                   <button 
-                    onClick={() => handleMenuAction('follow')}
+                    onClick={handleFollow}
+                    disabled={isFollowLoading}
                     className="w-full text-left p-3 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-3"
                   >
-                    <span className="text-2xl">👤</span>
-                    <span>Suivre cet utilisateur</span>
+                    {isFollowingUser ? (
+                      <>
+                        <UserCheck className="w-5 h-5 text-green-500" />
+                        <span>Se désabonner</span>
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-5 h-5" />
+                        <span>Suivre cet utilisateur</span>
+                      </>
+                    )}
                   </button>
                   <button 
                     onClick={() => handleMenuAction('save')}
@@ -252,8 +291,24 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
                 Se connecter
               </Button>
             }>
-              <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
-                Suivre
+              <Button 
+                variant={isFollowingUser ? "default" : "outline"} 
+                size="sm" 
+                className="h-7 px-2 text-xs"
+                onClick={handleFollow}
+                disabled={isFollowLoading}
+              >
+                {isFollowingUser ? (
+                  <>
+                    <UserCheck className="w-3 h-3 mr-1" />
+                    Suivi
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-3 h-3 mr-1" />
+                    Suivre
+                  </>
+                )}
               </Button>
             </ProtectedComponent>
           </div>
