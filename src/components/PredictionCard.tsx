@@ -1,5 +1,4 @@
-
-import { Heart, MessageCircle, Share, Star, MoreVertical, Play, VolumeX, Volume2, Pause } from 'lucide-react';
+import { Heart, MessageCircle, Share, Star, MoreVertical, Play, VolumeX, Volume2, Pause, Maximize, Minimize } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -13,7 +12,7 @@ import {
 import PredictionModal from './PredictionModal';
 import CommentsBottomSheet from './CommentsBottomSheet';
 import ProtectedComponent from './ProtectedComponent';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -61,31 +60,17 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
   const [isMuted, setIsMuted] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(prediction.likes);
+  const [showControls, setShowControls] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hideControlsTimeout = useRef<NodeJS.Timeout>();
 
   const handleMenuAction = (action: string) => {
     if (!requireAuth()) return;
     console.log(`Action: ${action} on prediction ${prediction.id}`);
-  };
-
-  const handleVideoClick = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        videoRef.current.play();
-        setIsPlaying(true);
-      }
-    }
-  };
-
-  const toggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Empêcher le clic de se propager au conteneur vidéo
-    if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
-      setIsMuted(videoRef.current.muted);
-    }
   };
 
   const handleProfileClick = () => {
@@ -136,6 +121,100 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
       console.error('Error liking post:', error);
     }
   };
+
+  const handleVideoClick = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        videoRef.current.play();
+        setIsPlaying(true);
+      }
+      showControlsTemporarily();
+    }
+  };
+
+  const showControlsTemporarily = () => {
+    setShowControls(true);
+    if (hideControlsTimeout.current) {
+      clearTimeout(hideControlsTimeout.current);
+    }
+    hideControlsTimeout.current = setTimeout(() => {
+      if (isPlaying) {
+        setShowControls(false);
+      }
+    }, 3000);
+  };
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(videoRef.current.muted);
+    }
+  };
+
+  const toggleFullscreen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsFullscreen(!isFullscreen);
+  };
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (videoRef.current && duration > 0) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const newTime = (clickX / rect.width) * duration;
+      videoRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const updateProgress = () => {
+      setCurrentTime(video.currentTime);
+      setProgress((video.currentTime / video.duration) * 100);
+    };
+
+    const handleLoadedMetadata = () => {
+      setDuration(video.duration);
+    };
+
+    const handlePlay = () => {
+      setIsPlaying(true);
+      showControlsTemporarily();
+    };
+
+    const handlePause = () => {
+      setIsPlaying(false);
+      setShowControls(true);
+    };
+
+    video.addEventListener('timeupdate', updateProgress);
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
+
+    return () => {
+      video.removeEventListener('timeupdate', updateProgress);
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
+      if (hideControlsTimeout.current) {
+        clearTimeout(hideControlsTimeout.current);
+      }
+    };
+  }, []);
 
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow">
@@ -286,43 +365,84 @@ const PredictionCard = ({ prediction }: PredictionCardProps) => {
           <div className="mb-4 rounded-lg overflow-hidden relative">
             {prediction.video ? (
               <div 
-                className="relative cursor-pointer"
+                className={`relative cursor-pointer ${isFullscreen ? 'fixed inset-0 z-50 bg-black flex items-center justify-center' : ''}`}
                 onClick={handleVideoClick}
+                onMouseEnter={() => setShowControls(true)}
+                onMouseLeave={() => {
+                  if (isPlaying) {
+                    showControlsTemporarily();
+                  }
+                }}
               >
                 <video
                   ref={videoRef}
-                  className="w-full h-48 object-cover"
+                  className={`object-cover ${isFullscreen ? 'max-w-full max-h-full' : 'w-full h-48'}`}
                   poster="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&h=600&fit=crop"
                   muted={isMuted}
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
+                  playsInline
+                  preload="metadata"
                   controls={false}
                 >
                   <source src={prediction.video} type="video/mp4" />
                 </video>
                 
-                {/* Play/Pause Button */}
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 transition-opacity">
-                  <div className="w-16 h-16 bg-white bg-opacity-90 rounded-full flex items-center justify-center">
-                    {isPlaying ? (
-                      <Pause className="w-8 h-8 text-gray-800" />
-                    ) : (
-                      <Play className="w-8 h-8 text-gray-800 ml-1" />
-                    )}
+                {/* Contrôles vidéo */}
+                <div className={`absolute inset-0 transition-opacity duration-300 ${
+                  showControls || !isPlaying ? 'opacity-100' : 'opacity-0'
+                }`}>
+                  {/* Bouton Play/Pause central */}
+                  {!isPlaying && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-16 h-16 bg-white bg-opacity-90 rounded-full flex items-center justify-center">
+                        <Play className="w-8 h-8 text-gray-800 ml-1" />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Contrôles en bas */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                    {/* Barre de progression */}
+                    <div 
+                      className="w-full h-1 bg-white/30 rounded-full mb-2 cursor-pointer"
+                      onClick={handleProgressClick}
+                    >
+                      <div 
+                        className="h-full bg-white rounded-full transition-all duration-200"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    
+                    {/* Boutons de contrôle */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <button 
+                          onClick={toggleMute}
+                          className="w-8 h-8 bg-black/60 rounded-full flex items-center justify-center"
+                        >
+                          {isMuted ? (
+                            <VolumeX className="w-4 h-4 text-white" />
+                          ) : (
+                            <Volume2 className="w-4 h-4 text-white" />
+                          )}
+                        </button>
+                        <span className="text-white text-xs">
+                          {formatTime(currentTime)} / {formatTime(duration)}
+                        </span>
+                      </div>
+                      
+                      <button 
+                        onClick={toggleFullscreen}
+                        className="w-8 h-8 bg-black/60 rounded-full flex items-center justify-center"
+                      >
+                        {isFullscreen ? (
+                          <Minimize className="w-4 h-4 text-white" />
+                        ) : (
+                          <Maximize className="w-4 h-4 text-white" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
-                
-                {/* Mute Button */}
-                <button 
-                  onClick={toggleMute}
-                  className="absolute bottom-2 right-2 w-8 h-8 bg-black bg-opacity-60 rounded-full flex items-center justify-center"
-                >
-                  {isMuted ? (
-                    <VolumeX className="w-4 h-4 text-white" />
-                  ) : (
-                    <Volume2 className="w-4 h-4 text-white" />
-                  )}
-                </button>
               </div>
             ) : prediction.image && (
               <img

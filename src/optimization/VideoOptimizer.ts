@@ -43,8 +43,10 @@ export class VideoOptimizer {
       };
 
       video.onseeked = () => {
-        ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/webp', 0.8));
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/webp', 0.8));
+        }
       };
 
       video.onerror = reject;
@@ -65,5 +67,19 @@ export class VideoOptimizer {
         resolve(false);
       }
     });
+  }
+
+  static async optimizeVideo(file: File, settings: VideoOptimizationSettings): Promise<File> {
+    // Pour une optimisation vidéo complète, nous aurions besoin d'une bibliothèque comme FFmpeg.wasm
+    // Pour l'instant, nous retournons le fichier original s'il respecte les critères
+    const isValid = await this.validateVideo(file, settings);
+    
+    if (isValid) {
+      return file;
+    }
+    
+    // En cas de fichier non valide, on peut implémenter une compression basique
+    // ou rejeter le fichier selon les besoins
+    throw new Error('Video file does not meet optimization criteria');
   }
 }
